@@ -16,23 +16,10 @@ export interface Room {
   users?: string[];
 }
 
-export interface UserJoinedPayload {
+export interface UserMovePayload {
   room_id: string;
   user_id: string;
   user_name: string;
-  user_count: number;
-  users?: string[];
-  leader_id?: string;
-  game_active?: boolean;
-}
-
-export interface UserLeftPayload {
-  room_id: string;
-  user_id: string;
-  user_name: string;
-  user_count: number;
-  users?: string[];
-  leader_id?: string;
 }
 
 export interface RoomCreatePayload {
@@ -47,7 +34,6 @@ export interface RoomCreatePayload {
 interface RoomsState {
   rooms: Room[];
   selectedRoom: Room | null;
-  currentRoomId: string | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -55,7 +41,6 @@ interface RoomsState {
 const initialState: RoomsState = {
   rooms: [],
   selectedRoom: null,
-  currentRoomId: null,
   isLoading: false,
   error: null,
 };
@@ -72,58 +57,20 @@ const roomsSlice = createSlice({
       state.error = null;
     },
     // Пользователь присоединился
-    userJoined: (state, action: PayloadAction<UserJoinedPayload>) => {
+    userJoined: (state, action: PayloadAction<UserMovePayload>) => {
       console.log('👤 [roomsSlice] userJoined:', action.payload.user_name);
       const room = state.rooms.find(r => r.id === action.payload.room_id);
       if (room) {
-        room.current_users = action.payload.user_count;
-        if (action.payload.users) {
-          room.users = action.payload.users;
-        }
-        if (action.payload.leader_id) {
-          room.leader_id = action.payload.leader_id;
-        }
-        if (action.payload.game_active !== undefined) {
-          room.game_active = action.payload.game_active;
-        }
-      }
-
-      if (state.selectedRoom?.id === action.payload.room_id) {
-        state.selectedRoom.current_users = action.payload.user_count;
-        if (action.payload.users) {
-          state.selectedRoom.users = action.payload.users;
-        }
-        if (action.payload.leader_id) {
-          state.selectedRoom.leader_id = action.payload.leader_id;
-        }
-        if (action.payload.game_active !== undefined) {
-          state.selectedRoom.game_active = action.payload.game_active;
-        }
+        state.selectedRoom = room;
       }
     },
 
     // Пользователь вышел
-    userLeft: (state, action: PayloadAction<UserLeftPayload>) => {
+    userLeft: (state, action: PayloadAction<UserMovePayload>) => {
       console.log('👋 [roomsSlice] userLeft:', action.payload.user_name);
       const room = state.rooms.find(r => r.id === action.payload.room_id);
-      if (room) {
-        room.current_users = action.payload.user_count;
-        if (action.payload.users) {
-          room.users = action.payload.users;
-        }
-        if (action.payload.leader_id) {
-          room.leader_id = action.payload.leader_id;
-        }
-      }
-
-      if (state.selectedRoom?.id === action.payload.room_id) {
-        state.selectedRoom.current_users = action.payload.user_count;
-        if (action.payload.users) {
-          state.selectedRoom.users = action.payload.users;
-        }
-        if (action.payload.leader_id) {
-          state.selectedRoom.leader_id = action.payload.leader_id;
-        }
+      if (room === state.selectedRoom) {
+        state.selectedRoom = null;
       }
     },
 
@@ -132,7 +79,6 @@ const roomsSlice = createSlice({
       state.rooms = state.rooms.filter(room => room.id !== action.payload);
       if (state.selectedRoom?.id === action.payload) {
         state.selectedRoom = null;
-        state.currentRoomId = null;
       }
     },
 
@@ -163,25 +109,6 @@ const roomsSlice = createSlice({
       }
     },
 
-    // Выбор комнаты
-    selectRoom: (state, action: PayloadAction<Room>) => {
-      console.log('🎯 [roomsSlice] selectRoom:', action.payload.id);
-      state.selectedRoom = action.payload;
-    },
-
-    // Установка текущей комнаты
-    setCurrentRoom: (state, action: PayloadAction<string | null>) => {
-      console.log('🔌 [roomsSlice] setCurrentRoom:', action.payload);
-      state.currentRoomId = action.payload;
-    },
-
-    // Очистка выбранной комнаты
-    clearSelectedRoom: (state) => {
-      console.log('🧹 [roomsSlice] clearSelectedRoom');
-      state.selectedRoom = null;
-      state.currentRoomId = null;
-    },
-
     clearError: (state) => {
       state.error = null;
     },
@@ -206,9 +133,6 @@ export const {
   createRoom,
   updateRoom,
   gameStatusChanged,
-  selectRoom,
-  setCurrentRoom,
-  clearSelectedRoom,
   clearError,
   setLoading,
   setError,
@@ -216,11 +140,11 @@ export const {
 
 export const selectAllRooms = (state: { rooms: RoomsState }) => state.rooms.rooms;
 export const selectCurrentRoom = (state: { rooms: RoomsState }) => state.rooms.selectedRoom;
-export const selectCurrentRoomId = (state: { rooms: RoomsState }) => state.rooms.currentRoomId;
 export const selectRoomsLoading = (state: { rooms: RoomsState }) => state.rooms.isLoading;
 export const selectRoomsError = (state: { rooms: RoomsState }) => state.rooms.error;
 
 export const selectRoomById = (state: { rooms: RoomsState }, roomId: string) => {
   return state.rooms.rooms.find(room => room.id === roomId);
 };
+
 export default roomsSlice.reducer;

@@ -139,7 +139,6 @@ export const selectUserForWebSocket = createSelector(
   (userId, username) => ({
     user_id: userId,
     user_name: username,
-    displayName: username
   })
 );
 

@@ -1,7 +1,7 @@
 // src/components/Chat/Chat.tsx
 import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store';
-import { sendMessage, requestHistory, setActiveRoom, setLoading } from '../../store/slices/chat.slice';
+import { sendMessage, requestHistory, setActiveRoom, setLoading,selectIsLoading,selectMessages } from '../../store/slices/chat.slice';
 import { selectUser } from '../../store/slices/user.slice';
 import { selectCurrentRoom } from '../../store/slices/rooms.slice';
 import { useAutoScroll } from '../../hooks/useAutoScroll';
@@ -15,12 +15,8 @@ export const Chat = () => {
   const isConnected = useAppSelector(state => state.websocket.isConnected);
   const [input, setInput] = useState('');
 
-  const messages = useAppSelector(state =>
-    room ? state.chat.rooms[room.id]?.messages || [] : []
-  );
-  const isLoading = useAppSelector(state =>
-    room ? state.chat.rooms[room.id]?.isLoading || false : false
-  );
+  const messages = useAppSelector(selectMessages);
+  const isLoading = useAppSelector(selectIsLoading);
 
   const { containerRef, handleScroll, autoScroll } = useAutoScroll([messages]);
 
@@ -28,11 +24,11 @@ export const Chat = () => {
   useEffect(() => {
     if (room?.id && isConnected) {
       dispatch(setActiveRoom(room.id));
-      dispatch(setLoading({ roomId: room.id, isLoading: true }));
+      dispatch(setLoading(true));
       dispatch(requestHistory(room.id));
 
       const timeout = setTimeout(() => {
-        dispatch(setLoading({ roomId: room.id, isLoading: false }));
+        dispatch(setLoading(false));
       }, 5000);
 
       return () => clearTimeout(timeout);
@@ -56,6 +52,7 @@ export const Chat = () => {
 
   // Отображение загаданного слова для ведущего
   const renderCurrentWord = () => {
+    console.log("/-*/-*",room?.leader_id,user.id)
     const isLeader = room?.leader_id === user.id;
     const currentWord = room?.current_word;
 
@@ -71,7 +68,10 @@ export const Chat = () => {
     return null;
   };
 
-  if (!room) return null;
+  if (!room){
+    console.log("chat room is null")
+    return null;
+  } 
 
   if (!isConnected) {
     return (

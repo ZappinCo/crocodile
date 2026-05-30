@@ -17,11 +17,7 @@ import {
 import {
   addMessage,
   setMessagesHistory,
-  deleteMessage,
-  updateMessage,
-  userTyping,
   setLoading,
-  addChatRoom,
 } from '../store/slices/chat.slice';
 
 // Упрощенная типизация middleware
@@ -53,23 +49,6 @@ export const websocketMiddleware: Middleware = ({ dispatch, getState }) => {
       console.log('📦 [Middleware] rooms_list', rooms);
       if (Array.isArray(rooms)) {
         dispatch(setRooms(rooms));
-      }
-    });
-
-    webSocketService.on('user_joined', (data) => {
-      console.log('👤 [Middleware] user_joined', data);
-      if (data) {
-        dispatch(userJoined(data));
-        if (data.room_id) {
-          dispatch(addChatRoom(data.room_id));
-        }
-      }
-    });
-
-    webSocketService.on('user_left', (data) => {
-      console.log('👋 [Middleware] user_left', data);
-      if (data) {
-        dispatch(userLeft(data));
       }
     });
 
@@ -120,30 +99,10 @@ export const websocketMiddleware: Middleware = ({ dispatch, getState }) => {
           room_id: data.room_id,
           messages: data.messages || []
         }));
-        dispatch(setLoading({ roomId: data.room_id, isLoading: false }));
+        dispatch(setLoading(false));
       }
     });
 
-    webSocketService.on('message_deleted', (data) => {
-      console.log('🗑️ [Middleware] message_deleted', data);
-      if (data) {
-        dispatch(deleteMessage(data));
-      }
-    });
-
-    webSocketService.on('message_updated', (data) => {
-      console.log('✏️ [Middleware] message_updated', data);
-      if (data) {
-        dispatch(updateMessage(data));
-      }
-    });
-
-    webSocketService.on('typing', (data) => {
-      console.log('⌨️ [Middleware] typing', data);
-      if (data) {
-        dispatch(userTyping(data));
-      }
-    });
 
     webSocketService.on('leader_word', (data) => {
       console.log('🔤 [Middleware] leader_word', data);
@@ -173,11 +132,11 @@ export const websocketMiddleware: Middleware = ({ dispatch, getState }) => {
         webSocketService.emitEvent('request_history', action.payload);
         console.log('📤 [Middleware] requestHistory', action.payload);
         break;
-      case 'rooms/joinRoom':
+      case 'rooms/userJoined':
         webSocketService.emitEvent('user_joined', action.payload);
         console.log('📤 [Middleware] joinRoom', action.payload);
         break;
-      case 'rooms/leaveRoom':
+      case 'rooms/userLeft':
         webSocketService.emitEvent('user_left', action.payload);
         console.log('📤 [Middleware] leaveRoom', action.payload);
         break;
@@ -202,9 +161,6 @@ export const websocketMiddleware: Middleware = ({ dispatch, getState }) => {
       case 'game/makeGuess':
         webSocketService.emitEvent('make_guess', action.payload);
         console.log('📤 [Middleware] makeGuess', action.payload);
-        break;
-      case 'chat/sendTyping':
-        webSocketService.emitEvent('typing', action.payload);
         break;
       default:
         break;

@@ -84,10 +84,6 @@ class Room:
             self.leader_name = self.users[new_leader_id]
             self.current_word = random.choice(self.words_pool)
         
-        if self.current_users == 0 and not self.is_default:
-            return True
-        
-        return False
 
     def get_user_name(self, user_id: str) -> str:
         return self.users.get(user_id, user_id)
@@ -162,6 +158,7 @@ class RoomManager:
         if not room:
             return None, "Room not found"
         
+        
         if room.add_user(user_id, user_name):
             self._add_system_message(room_id, f"✨ {user_name} присоединился!")
             if room.leader_id == user_id and room.current_word:
@@ -169,20 +166,17 @@ class RoomManager:
             return room, None
         return None, "Room is full"
 
-    def leave_room(self, room_id: str, user_id: str):
+    def leave_room(self, room_id: str, user_id: str, user_name: str):
         room = self.rooms.get(room_id)
         if not room:
             return None, False
         
-        user_name = room.get_user_name(user_id)
-        should_delete = room.remove_user(user_id)
+        user_name = room.get_user_name(user_name)
+        room.remove_user(user_id)
         
-        if not should_delete:
-            self._add_system_message(room_id, f"👋 {user_name} покинул комнату")
         
-        if should_delete:
-            # self.delete_room(room_id)
-            return None, True
+        self._add_system_message(room_id, f"👋 {user_name} покинул комнату")
+        
         
         return room, False
 

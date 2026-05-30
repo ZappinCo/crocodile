@@ -1,10 +1,9 @@
 // src/components/RoomsList/RoomCard.tsx
 import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store';
-import { webSocketService } from '../../services/websocket.service';
 import { selectUsername, selectUserId } from '../../store/slices/user.slice';
 import type { Room } from '../../store/slices/rooms.slice';
-import { selectRoom, deleteRoom, updateRoom } from '../../store/slices/rooms.slice';
+import { deleteRoom, updateRoom } from '../../store/slices/rooms.slice';
 import { useNavigate } from 'react-router';
 
 
@@ -44,7 +43,6 @@ export const RoomCard = ({ room }: { room: Room }) => {
 
   const handleRoomClick = () => {
     if (room && room.current_users < room.capacity) {
-      dispatch(selectRoom(room));
       navigate(`/room/${room.id}`);
     }
   };

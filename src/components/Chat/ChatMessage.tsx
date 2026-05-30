@@ -5,6 +5,7 @@ interface ChatMessageProps {
   message: {
     id: string;
     userId: string;
+    userName:string;
     text: string;
     timestamp: string;
     isGuess?: boolean;
@@ -47,7 +48,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       <div className="message-bubble">
         {!isOwn && (
           <div className="message-author">
-            {message.userId}
+            {message.userName}
             {isLeader && isGameActive && (
               <span className="leader-badge-small" title="Ведущий">
                 👑

@@ -44,6 +44,7 @@ async def send_json(ws: WebSocket, msg_type: str, payload: dict):
 async def broadcast_to_room(room_id: str, msg_type: str, payload: dict, exclude_ws: WebSocket = None):
     """Отправить сообщение всем в комнате"""
     for ws, info in active_connections.items():
+        print("send room message to ",info)
         if info.get("room_id") == room_id and ws != exclude_ws:
             await send_json(ws, msg_type, payload)
 
@@ -151,7 +152,7 @@ async def websocket_handler(websocket: WebSocket):
                 room_id = payload.get("room_id")
                 
                 room, error = room_manager.join_room(room_id, user_id, user_name)
-                
+                print("user_joined")
                 if room:
                     active_connections[websocket]["user_id"] = user_id
                     active_connections[websocket]["room_id"] = room.id
@@ -185,7 +186,7 @@ async def websocket_handler(websocket: WebSocket):
                 user_id = payload.get("user_id")
                 user_name = payload.get("user_name", user_id)
                 
-                room, deleted = room_manager.leave_room(room_id, user_id)
+                room, deleted = room_manager.leave_room(room_id, user_id,user_name)
                 
                 active_connections[websocket]["room_id"] = None
                 active_connections[websocket]["user_id"] = None
@@ -211,13 +212,14 @@ async def websocket_handler(websocket: WebSocket):
             elif msg_type == "new_message":
                 room_id = payload.get("roomId")
                 user_id = payload.get("userId")
-                user_name = payload.get("userName", user_id)
+                user_name = payload.get("userName")
                 text = payload.get("text")
                 is_guess = payload.get("isGuess", False)
                 
                 result = room_manager.add_message(room_id, user_id, user_name, text, is_guess)
                 
                 if result:
+                    print("broadcast_to_room")
                     await broadcast_to_room(room_id, "new_message", result.to_dict())
                     
                     if "угадал" in result.text:
