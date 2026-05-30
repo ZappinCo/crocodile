@@ -1,7 +1,7 @@
 // src/components/Chat/Chat.tsx
 import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store';
-import { sendMessage, requestHistory, setActiveRoom, setLoading,selectIsLoading,selectMessages } from '../../store/slices/chat.slice';
+import { sendMessage, requestHistory, setActiveRoom, setLoading, selectIsLoading, selectMessages } from '../../store/slices/chat.slice';
 import { selectUser } from '../../store/slices/user.slice';
 import { selectCurrentRoom } from '../../store/slices/rooms.slice';
 import { useAutoScroll } from '../../hooks/useAutoScroll';
@@ -12,11 +12,18 @@ export const Chat = () => {
   const dispatch = useAppDispatch();
   const room = useAppSelector(selectCurrentRoom);
   const user = useAppSelector(selectUser);
+  const [isLeader, setIsLeader] = useState(false);
+
   const isConnected = useAppSelector(state => state.websocket.isConnected);
   const [input, setInput] = useState('');
 
   const messages = useAppSelector(selectMessages);
   const isLoading = useAppSelector(selectIsLoading);
+
+
+  useEffect(() => {
+    setIsLeader(room?.leader_id === user.id);
+  }, [room?.leader_id, user.id])
 
   const { containerRef, handleScroll, autoScroll } = useAutoScroll([messages]);
 
@@ -39,7 +46,7 @@ export const Chat = () => {
     const text = input.trim();
     if (!text || !isConnected || !room) return;
 
-    dispatch(sendMessage(text,room.id,user));
+    dispatch(sendMessage(text, room.id, user));
     setInput('');
   };
 
@@ -52,8 +59,6 @@ export const Chat = () => {
 
   // Отображение загаданного слова для ведущего
   const renderCurrentWord = () => {
-    console.log("/-*/-*",room?.leader_id,user.id)
-    const isLeader = room?.leader_id === user.id;
     const currentWord = room?.current_word;
 
     if (isLeader && currentWord) {
@@ -68,10 +73,10 @@ export const Chat = () => {
     return null;
   };
 
-  if (!room){
+  if (!room) {
     console.log("chat room is null")
     return null;
-  } 
+  }
 
   if (!isConnected) {
     return (
@@ -95,7 +100,6 @@ export const Chat = () => {
     );
   }
 
-  const isLeader = room.leader_id === user.id;
   const isGameActive = room.game_active;
 
   return (

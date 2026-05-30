@@ -10,8 +10,8 @@ import {
 } from '../store/slices/websocket.slice';
 import {
   setRooms,
-  userJoined,
-  userLeft,
+  updateRoom,
+  editRoom,
   gameStatusChanged,
 } from '../store/slices/rooms.slice';
 import {
@@ -104,18 +104,9 @@ export const websocketMiddleware: Middleware = ({ dispatch, getState }) => {
     });
 
 
-    webSocketService.on('leader_word', (data) => {
-      console.log('🔤 [Middleware] leader_word', data);
-      if (data && data.word) {
-        const state = getState();
-        const currentRoom = (state as any).rooms?.selectedRoom;
-        if (currentRoom) {
-          dispatch(updateRoom({
-            ...currentRoom,
-            current_word: data.word
-          }));
-        }
-      }
+    webSocketService.on('room_update', (data) => {
+      console.log('🔤 [Middleware] room_update', data);
+      dispatch(updateRoom(data));
     });
   };
 
@@ -145,11 +136,11 @@ export const websocketMiddleware: Middleware = ({ dispatch, getState }) => {
         console.log('📤 [Middleware] createRoom', action.payload);
         break;
 
-      case 'rooms/updateRoom':
-        webSocketService.emitEvent('update_room', action.payload);
-        console.log('📤 [Middleware] updateRoom', action.payload);
+      case 'rooms/editRoom':
+        webSocketService.emitEvent('edit_room', action.payload);
+        console.log('📤 [Middleware] edit_room', action.payload);
         break;
-        
+
       case 'rooms/deleteRoom':
         webSocketService.emitEvent('delete_room', action.payload);
         console.log('📤 [Middleware] delete_room', action.payload);

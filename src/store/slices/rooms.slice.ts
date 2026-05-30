@@ -82,8 +82,16 @@ const roomsSlice = createSlice({
       }
     },
 
-    updateRoom: (state, action: PayloadAction<RoomCreatePayload>) => {
-      console.log('🎮 [roomsSlice] updateRoom:', action.payload);
+    updateRoom: (state, action: PayloadAction<Room>) => {
+      console.log('🎮 [roomsSlice] updateRoom:', action);
+      const index = state.rooms.findIndex(room => room.id === action.payload.id);
+      if (index !== -1) {
+        state.rooms[index] = action.payload;
+      }
+    },
+
+    editRoom: (state, action: PayloadAction<RoomCreatePayload>) => {
+      console.log('🎮 [roomsSlice] createRoom:', action.payload);
     },
 
     createRoom: (state, action: PayloadAction<RoomCreatePayload>) => {
@@ -132,6 +140,7 @@ export const {
   deleteRoom,
   createRoom,
   updateRoom,
+  editRoom,
   gameStatusChanged,
   clearError,
   setLoading,

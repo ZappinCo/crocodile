@@ -83,6 +83,11 @@ class Room:
             self.leader_id = new_leader_id
             self.leader_name = self.users[new_leader_id]
             self.current_word = random.choice(self.words_pool)
+
+        if self.current_users == 0:
+            self.leader_id = ''
+            self.leader_name = ''
+            self.current_word = random.choice(self.words_pool)
         
 
     def get_user_name(self, user_id: str) -> str:
@@ -161,8 +166,6 @@ class RoomManager:
         
         if room.add_user(user_id, user_name):
             self._add_system_message(room_id, f"✨ {user_name} присоединился!")
-            if room.leader_id == user_id and room.current_word:
-                self._add_system_message(room_id, f"🔤 Ваше слово: {room.current_word}")
             return room, None
         return None, "Room is full"
 

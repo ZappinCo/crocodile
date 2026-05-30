@@ -13,6 +13,7 @@ export type WebSocketEventType =
   | 'update_room'
   | 'get_rooms'
   | 'room_update'
+  | 'edit_room'
   | 'user_joined'
   | 'user_left'
   | 'game_started'

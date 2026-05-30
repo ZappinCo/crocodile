@@ -3,6 +3,8 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useAppSelector, useAppDispatch } from '../../store';
 import { addStroke, clearCanvas } from '../../store/slices/drawing.slice';
 import { selectBrush, selectEraserMode } from '../../store/slices/drawing.slice';
+import { selectCurrentRoom } from '../../store/slices/rooms.slice';
+import { selectUser } from '../../store/slices/user.slice';
 import { Pallete } from './Pallete';
 import '../../styles/components/drawing-canvas.css';
 
@@ -11,10 +13,19 @@ export const DrawingCanvas: React.FC = () => {
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentStroke, setCurrentStroke] = useState<{ points: { x: number; y: number }[] }>({ points: [] });
-  
+
   const brush = useAppSelector(selectBrush);
   const eraserMode = useAppSelector(selectEraserMode);
   const dispatch = useAppDispatch();
+
+  const room = useAppSelector(selectCurrentRoom);
+  const user = useAppSelector(selectUser);
+  const [isLeader, setIsLeader] = useState(false);
+
+
+  useEffect(() => {
+    setIsLeader(room?.leader_id === user.id);
+  }, [room?.leader_id, user.id])
 
   // Инициализация canvas
   useEffect(() => {
@@ -24,13 +35,13 @@ export const DrawingCanvas: React.FC = () => {
     const resizeCanvas = () => {
       const container = canvas.parentElement;
       if (!container) return;
-      
+
       const width = container.clientWidth;
       const height = container.clientHeight;
-      
+
       canvas.width = width;
       canvas.height = height;
-      
+
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.lineCap = 'round';
@@ -43,17 +54,17 @@ export const DrawingCanvas: React.FC = () => {
 
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
-    
+
     return () => window.removeEventListener('resize', resizeCanvas);
   }, []);
 
   const getCanvasCoordinates = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
-    
+
     const rect = canvas.getBoundingClientRect();
     let clientX, clientY;
-    
+
     if ('touches' in e) {
       clientX = e.touches[0].clientX;
       clientY = e.touches[0].clientY;
@@ -61,10 +72,10 @@ export const DrawingCanvas: React.FC = () => {
       clientX = e.clientX;
       clientY = e.clientY;
     }
-    
+
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    
+
     return {
       x: (clientX - rect.left) * scaleX,
       y: (clientY - rect.top) * scaleY
@@ -76,7 +87,7 @@ export const DrawingCanvas: React.FC = () => {
     const { x, y } = getCanvasCoordinates(e);
     setIsDrawing(true);
     setCurrentStroke({ points: [{ x, y }] });
-    
+
     const ctx = contextRef.current;
     if (ctx) {
       ctx.beginPath();
@@ -91,16 +102,16 @@ export const DrawingCanvas: React.FC = () => {
   const draw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     if (!isDrawing) return;
-    
+
     const { x, y } = getCanvasCoordinates(e);
     const ctx = contextRef.current;
-    
+
     if (ctx) {
       ctx.lineTo(x, y);
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(x, y);
-      
+
       setCurrentStroke(prev => ({
         points: [...prev.points, { x, y }]
       }));
@@ -109,7 +120,7 @@ export const DrawingCanvas: React.FC = () => {
 
   const stopDrawing = useCallback(() => {
     if (!isDrawing) return;
-    
+
     if (currentStroke.points.length > 1) {
       dispatch(addStroke({
         relative: currentStroke.points,
@@ -121,7 +132,7 @@ export const DrawingCanvas: React.FC = () => {
         }
       }));
     }
-    
+
     setIsDrawing(false);
     setCurrentStroke({ points: [] });
   }, [isDrawing, currentStroke, eraserMode, brush, dispatch]);
@@ -138,30 +149,29 @@ export const DrawingCanvas: React.FC = () => {
     }
   };
 
+  const drawingProps = isLeader ? {
+    onMouseDown: startDrawing,
+    onMouseMove: draw,
+    onMouseUp: stopDrawing,
+    onMouseLeave: stopDrawing,
+    onTouchStart: startDrawing,
+    onTouchMove: draw,
+    onTouchEnd: stopDrawing,
+    onTouchCancel: stopDrawing,
+  } : {};
+
   return (
     <div className="canvas-container">
       <canvas
         ref={canvasRef}
         className="drawing-canvas"
-        onMouseDown={startDrawing}
-        onMouseMove={draw}
-        onMouseUp={stopDrawing}
-        onMouseLeave={stopDrawing}
-        onTouchStart={startDrawing}
-        onTouchMove={draw}
-        onTouchEnd={stopDrawing}
-        onTouchCancel={stopDrawing}
         style={{
           cursor: isDrawing ? 'grabbing' : 'crosshair',
           touchAction: 'none'
         }}
+        {...drawingProps}
       />
-      <div className="canvas-controls">
-        <button onClick={handleClearCanvas} title="Очистить все">
-          🗑️
-        </button>
-      </div>
-      <Pallete />
+      {isLeader && <Pallete />}
     </div>
   );
 };

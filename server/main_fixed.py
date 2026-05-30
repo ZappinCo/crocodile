@@ -57,7 +57,6 @@ async def broadcast_to_all(msg_type: str, payload: dict):
 
 async def send_rooms_list_to_all():
     """Отправить список комнат всем клиентам"""
-    
     await broadcast_to_all("rooms_list", room_manager.get_all_rooms())
 
 
@@ -142,14 +141,19 @@ async def websocket_handler(websocket: WebSocket):
                     room.description = description
                     room.capacity = capacity
                     room_manager._add_system_message(room_id, f"✏️ Комната обновлена: {name}")
-                    await send_rooms_list_to_all()
+                    await broadcast_to_all("room_update", room.to_dict())
                 else:
                     await send_json(websocket, "error", {"message": "Cannot edit default room"})
             # 3. ПРИСОЕДИНИТЬСЯ К КОМНАТЕ
             elif msg_type == "user_joined":
+
                 user_id = payload.get("user_id")
                 user_name = payload.get("user_name", user_id)
                 room_id = payload.get("room_id")
+
+                info = active_connections.get(websocket)
+                info["room_id"] = room_id
+                info["user_id"] = user_id
                 
                 room, error = room_manager.join_room(room_id, user_id, user_name)
                 print("user_joined")
@@ -158,7 +162,7 @@ async def websocket_handler(websocket: WebSocket):
                     active_connections[websocket]["room_id"] = room.id
                     active_connections[websocket]["user_name"] = user_name
                     
-                    await broadcast_to_room(room.id, "room_update", room.to_dict())
+                    await broadcast_to_all("room_update", room.to_dict())
                     await broadcast_to_room(room.id, "user_joined", {
                         "room_id": room.id,
                         "user_id": user_id,
@@ -176,7 +180,6 @@ async def websocket_handler(websocket: WebSocket):
                         "messages": history
                     })
                     
-                    await send_rooms_list_to_all()
                 else:
                     await send_json(websocket, "error", {"message": error or "Cannot join room"})
             
@@ -192,10 +195,8 @@ async def websocket_handler(websocket: WebSocket):
                 active_connections[websocket]["user_id"] = None
                 active_connections[websocket]["user_name"] = None
                 
-                if deleted:
-                    await broadcast_to_all("room_deleted", room_id)
-                elif room:
-                    await broadcast_to_room(room_id, "room_update", room.to_dict())
+                if room:
+                    await broadcast_to_all("room_update", room.to_dict())
                     await broadcast_to_room(room_id, "user_left", {
                         "room_id": room_id,
                         "user_id": user_id,
@@ -205,8 +206,6 @@ async def websocket_handler(websocket: WebSocket):
                         "leader_id": room.leader_id,
                         "leader_name": room.leader_name
                     })
-                
-                await send_rooms_list_to_all()
             
             # 5. НОВОЕ СООБЩЕНИЕ
             elif msg_type == "new_message":
@@ -237,29 +236,6 @@ async def websocket_handler(websocket: WebSocket):
                         "messages": history
                     })
             
-            # 7. ИНФОРМАЦИЯ О КОМНАТЕ
-            elif msg_type == "get_room_info":
-                room_id = payload.get("room_id")
-                room = room_manager.get_room(room_id)
-                
-                if room:
-                    await send_json(websocket, "room_info", {
-                        "room": room.to_dict(),
-                        "users": room.get_users_with_names()
-                    })
-            
-            # 8. СТАТУС ИГРЫ
-            elif msg_type == "get_game_status":
-                room_id = payload.get("room_id")
-                room = room_manager.get_room(room_id)
-                if room:
-                    await send_json(websocket, "game_status", {
-                        "game_active": room.game_active,
-                        "current_word": room.current_word if room.leader_id else None,
-                        "leader_id": room.leader_id,
-                        "leader_name": room.leader_name
-                    })
-            
             # 9. PING
             elif msg_type == "ping":
                 await send_json(websocket, "pong", {"timestamp": datetime.now().timestamp()})
@@ -285,7 +261,7 @@ async def websocket_handler(websocket: WebSocket):
             user_id = info["user_id"]
             user_name = info.get("user_name", user_id)
             
-            room, deleted = room_manager.leave_room(room_id, user_id)
+            room, deleted = room_manager.leave_room(room_id, user_id,user_name)
             
             if room:
                 await broadcast_to_room(room_id, "room_update", room.to_dict())
@@ -299,7 +275,6 @@ async def websocket_handler(websocket: WebSocket):
                     "leader_name": room.leader_name
                 })
             
-            await send_rooms_list_to_all()
         
         active_connections.pop(websocket, None)
         print(f"📊 Total connections: {len(active_connections)}")
