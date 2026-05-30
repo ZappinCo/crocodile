@@ -4,24 +4,22 @@ import { useAppDispatch, useAppSelector } from '../../store';
 import { webSocketService } from '../../services/websocket.service';
 import { selectUsername, selectUserId } from '../../store/slices/user.slice';
 import type { Room } from '../../store/slices/rooms.slice';
+import { selectRoom, deleteRoom, updateRoom } from '../../store/slices/rooms.slice';
+import { useNavigate } from 'react-router';
 
-interface RoomCardProps {
-  room: Room;
-  onClick: () => void;
-  onRoomUpdate?: () => void;
-}
 
-export const RoomCard: React.FC<RoomCardProps> = ({ room, onClick, onRoomUpdate }) => {
+export const RoomCard = ({ room }: { room: Room }) => {
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const currentUsername = useAppSelector(selectUsername);
   const currentUserId = useAppSelector(selectUserId);
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(room.name);
   const [editDescription, setEditDescription] = useState(room.description || '');
   const [editCapacity, setEditCapacity] = useState(room.capacity);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   const freeSpaces = room.capacity - room.current_users;
   const isFull = freeSpaces === 0;
   const occupancyPercent = (room.current_users / room.capacity) * 100;
@@ -43,6 +41,14 @@ export const RoomCard: React.FC<RoomCardProps> = ({ room, onClick, onRoomUpdate 
     }
   };
 
+
+  const handleRoomClick = () => {
+    if (room && room.current_users < room.capacity) {
+      dispatch(selectRoom(room));
+      navigate(`/room/${room.id}`);
+    }
+  };
+
   // Редактирование комнаты
   const handleEdit = () => {
     if (!canEdit) return;
@@ -55,17 +61,16 @@ export const RoomCard: React.FC<RoomCardProps> = ({ room, onClick, onRoomUpdate 
       return;
     }
 
-    webSocketService.emitEvent('update_room', {
+    dispatch(updateRoom({
       room_id: room.id,
       name: editName.trim(),
       description: editDescription.trim(),
       capacity: editCapacity,
-      user_id: currentUserId,
-      user_name: currentUsername
-    });
+      creator_id: currentUserId,
+      creator_name: currentUsername
+    }));
 
     setIsEditing(false);
-    onRoomUpdate?.();
   };
 
   const handleCancelEdit = () => {
@@ -82,16 +87,7 @@ export const RoomCard: React.FC<RoomCardProps> = ({ room, onClick, onRoomUpdate 
   };
 
   const confirmDelete = () => {
-    if (window.confirm(`Вы уверены, что хотите удалить комнату "${room.name}"?`)) {
-      webSocketService.emitEvent('delete_room', {
-        room_id: room.id,
-        user_id: currentUserId,
-        user_name: currentUsername
-      });
-      
-      onRoomUpdate?.();
-    }
-    setIsDeleting(false);
+    dispatch(deleteRoom(room.id))
   };
 
   const cancelDelete = () => {
@@ -114,7 +110,7 @@ export const RoomCard: React.FC<RoomCardProps> = ({ room, onClick, onRoomUpdate 
               autoFocus
             />
           </div>
-          
+
           <div className="edit-field">
             <label>Описание:</label>
             <input
@@ -125,7 +121,7 @@ export const RoomCard: React.FC<RoomCardProps> = ({ room, onClick, onRoomUpdate 
               maxLength={100}
             />
           </div>
-          
+
           <div className="edit-field">
             <label>Максимум игроков:</label>
             <select value={editCapacity} onChange={(e) => setEditCapacity(Number(e.target.value))}>
@@ -136,7 +132,7 @@ export const RoomCard: React.FC<RoomCardProps> = ({ room, onClick, onRoomUpdate 
               <option value={12}>12 игроков</option>
             </select>
           </div>
-          
+
           <div className="edit-actions">
             <button className="edit-save-btn" onClick={handleSaveEdit}>
               💾 Сохранить
@@ -170,23 +166,23 @@ export const RoomCard: React.FC<RoomCardProps> = ({ room, onClick, onRoomUpdate 
   }
 
   return (
-    <div 
+    <div
       className={`room-card ${isFull ? 'full' : ''}  animate-fade-in-up`}
-      onClick={!isFull ? onClick : undefined}
+      onClick={!isFull ? handleRoomClick : undefined}
       style={{ cursor: !isFull ? 'pointer' : 'not-allowed' }}
     >
       {/* Кнопки управления (только для пользовательских комнат) */}
       {canEdit && (
         <div className="room-actions" onClick={(e) => e.stopPropagation()}>
-          <button 
-            className="room-edit-btn" 
+          <button
+            className="room-edit-btn"
             onClick={handleEdit}
             title="Редактировать комнату"
           >
             ✏️
           </button>
-          <button 
-            className="room-delete-btn" 
+          <button
+            className="room-delete-btn"
             onClick={handleDelete}
             title="Удалить комнату"
           >
@@ -194,13 +190,13 @@ export const RoomCard: React.FC<RoomCardProps> = ({ room, onClick, onRoomUpdate 
           </button>
         </div>
       )}
-      
+
       <div className="room-name">{room.name}</div>
-      
+
       {room.description && (
         <div className="room-description">{room.description}</div>
       )}
-      
+
       <div className="room-stats">
         <div className="stat">
           <span>👥</span>
@@ -209,7 +205,7 @@ export const RoomCard: React.FC<RoomCardProps> = ({ room, onClick, onRoomUpdate 
             <span>/{room.capacity}</span>
           </span>
         </div>
-                
+
         {room.game_active && (
           <div className="stat game-active">
             <span>🎮</span>
@@ -217,17 +213,17 @@ export const RoomCard: React.FC<RoomCardProps> = ({ room, onClick, onRoomUpdate 
           </div>
         )}
       </div>
-      
+
       <div className="room-progress">
         <div className="progress-bar">
-          <div 
+          <div
             className={`progress-fill ${isFull ? 'full' : ''}`}
             style={{ width: `${occupancyPercent}%` }}
           />
         </div>
 
       </div>
-      
+
       {room.created_at && (
         <div className="room-created">
           📅 {formatDate(room.created_at)}

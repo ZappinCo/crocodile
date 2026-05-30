@@ -1,8 +1,9 @@
 // src/components/RoomsList/CreateRoomModal.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { useAppSelector } from '../../store';
+import { useAppDispatch, useAppSelector } from '../../store';
 import { webSocketService } from '../../services/websocket.service';
 import { selectUserForWebSocket } from '../../store/slices/user.slice';
+import { createRoom } from '../../store/slices/rooms.slice'
 
 interface CreateRoomModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface CreateRoomModalProps {
 }
 
 export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({ isOpen, onClose }) => {
+  const dispatch = useAppDispatch();
   const [roomName, setRoomName] = useState('');
   const [description, setDescription] = useState('');
   const [capacity, setCapacity] = useState(6);
@@ -31,30 +33,30 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({ isOpen, onClos
 
   const handleSubmit = () => {
     const trimmedName = roomName.trim();
-    
+
     if (!trimmedName) {
       setError('Название комнаты не может быть пустым');
       return;
     }
-    
+
     if (trimmedName.length < 3) {
       setError('Название должно содержать минимум 3 символа');
       return;
     }
-    
+
     if (trimmedName.length > 30) {
       setError('Название не может быть длиннее 30 символов');
       return;
     }
-    
-    webSocketService.emitEvent('room_created', {
+
+    dispatch(createRoom({
+      room_id: null,
       name: trimmedName,
-      description: description.trim() || undefined,
+      description: description.trim() || null,
       capacity,
       creator_id: userForWS.user_id,
       creator_name: userForWS.user_name
-    });
-    
+    }));
     onClose();
   };
 
@@ -76,7 +78,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({ isOpen, onClos
           <h2>Создать новую комнату</h2>
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
-        
+
         <div className="modal-body">
           <div className="input-group">
             <label htmlFor="roomName">Название комнаты *</label>
@@ -96,7 +98,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({ isOpen, onClos
             />
             {error && <div className="error-message">{error}</div>}
           </div>
-          
+
           <div className="input-group">
             <label htmlFor="description">Описание (необязательно)</label>
             <input
@@ -108,7 +110,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({ isOpen, onClos
               placeholder="Краткое описание комнаты..."
             />
           </div>
-          
+
           <div className="input-group">
             <label htmlFor="capacity">Максимум игроков</label>
             <select
@@ -122,9 +124,9 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({ isOpen, onClos
               <option value={10}>10 игроков</option>
             </select>
           </div>
-      
+
         </div>
-        
+
         <div className="modal-footer">
           <button className="btn-cancel" onClick={onClose}>
             Отмена

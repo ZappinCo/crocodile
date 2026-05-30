@@ -8,7 +8,7 @@ import { useAutoScroll } from '../../hooks/useAutoScroll';
 import { ChatMessage } from './ChatMessage';
 import '../../styles/components/chat.css';
 
-export const Chat: React.FC = () => {
+export const Chat = () => {
   const dispatch = useAppDispatch();
   const room = useAppSelector(selectCurrentRoom);
   const user = useAppSelector(selectUser);

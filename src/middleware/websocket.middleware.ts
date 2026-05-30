@@ -2,11 +2,11 @@
 import type { Middleware } from '@reduxjs/toolkit';
 import { webSocketService } from '../services/websocket.service';
 import type { WebSocketEventType } from '../services/websocket.service';
-import { 
-  connected, 
-  disconnected, 
-  websocketError, 
-  reconnecting 
+import {
+  connected,
+  disconnected,
+  websocketError,
+  reconnecting
 } from '../store/slices/websocket.slice';
 import {
   setRooms,
@@ -182,8 +182,18 @@ export const websocketMiddleware: Middleware = ({ dispatch, getState }) => {
         console.log('📤 [Middleware] leaveRoom', action.payload);
         break;
       case 'rooms/createRoom':
-        webSocketService.emitEvent('room_created', action.payload);
+        webSocketService.emitEvent('create_room', action.payload);
         console.log('📤 [Middleware] createRoom', action.payload);
+        break;
+
+      case 'rooms/updateRoom':
+        webSocketService.emitEvent('update_room', action.payload);
+        console.log('📤 [Middleware] updateRoom', action.payload);
+        break;
+        
+      case 'rooms/deleteRoom':
+        webSocketService.emitEvent('delete_room', action.payload);
+        console.log('📤 [Middleware] delete_room', action.payload);
         break;
       case 'game/startGame':
         webSocketService.emitEvent('start_game', action.payload);

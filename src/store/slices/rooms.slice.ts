@@ -6,7 +6,7 @@ export interface Room {
   name: string;
   description: string;
   capacity: number;
-  owner_id:string;
+  owner_id: string;
   current_users: number;
   created_at: string;
   updated_at: string;
@@ -33,6 +33,15 @@ export interface UserLeftPayload {
   user_count: number;
   users?: string[];
   leader_id?: string;
+}
+
+export interface RoomCreatePayload {
+  room_id: string | null;
+  name: string;
+  description: string | null;
+  capacity: number;
+  creator_id: string;
+  creator_name: string;
 }
 
 interface RoomsState {
@@ -62,7 +71,6 @@ const roomsSlice = createSlice({
       state.isLoading = false;
       state.error = null;
     },
-
     // Пользователь присоединился
     userJoined: (state, action: PayloadAction<UserJoinedPayload>) => {
       console.log('👤 [roomsSlice] userJoined:', action.payload.user_name);
@@ -79,7 +87,7 @@ const roomsSlice = createSlice({
           room.game_active = action.payload.game_active;
         }
       }
-      
+
       if (state.selectedRoom?.id === action.payload.room_id) {
         state.selectedRoom.current_users = action.payload.user_count;
         if (action.payload.users) {
@@ -107,7 +115,7 @@ const roomsSlice = createSlice({
           room.leader_id = action.payload.leader_id;
         }
       }
-      
+
       if (state.selectedRoom?.id === action.payload.room_id) {
         state.selectedRoom.current_users = action.payload.user_count;
         if (action.payload.users) {
@@ -117,6 +125,23 @@ const roomsSlice = createSlice({
           state.selectedRoom.leader_id = action.payload.leader_id;
         }
       }
+    },
+
+    deleteRoom: (state, action: PayloadAction<string>) => {
+      console.log('🎮 [roomsSlice] deleteRoom:', action.payload);
+      state.rooms = state.rooms.filter(room => room.id !== action.payload);
+      if (state.selectedRoom?.id === action.payload) {
+        state.selectedRoom = null;
+        state.currentRoomId = null;
+      }
+    },
+
+    updateRoom: (state, action: PayloadAction<RoomCreatePayload>) => {
+      console.log('🎮 [roomsSlice] updateRoom:', action.payload);
+    },
+
+    createRoom: (state, action: PayloadAction<RoomCreatePayload>) => {
+      console.log('🎮 [roomsSlice] createRoom:', action.payload);
     },
 
     // Обновление статуса игры
@@ -129,7 +154,7 @@ const roomsSlice = createSlice({
           room.current_word = action.payload.current_word;
         }
       }
-      
+
       if (state.selectedRoom?.id === action.payload.room_id) {
         state.selectedRoom.game_active = action.payload.game_active;
         if (action.payload.current_word !== undefined) {
@@ -177,6 +202,9 @@ export const {
   setRooms,
   userJoined,
   userLeft,
+  deleteRoom,
+  createRoom,
+  updateRoom,
   gameStatusChanged,
   selectRoom,
   setCurrentRoom,

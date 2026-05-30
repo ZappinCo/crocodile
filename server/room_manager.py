@@ -150,7 +150,7 @@ class RoomManager:
 
     def delete_room(self, room_id: str) -> bool:
         room = self.rooms.get(room_id)
-        if room and not room.is_default:
+        if room and not room.owner_id == "system":
             del self.rooms[room_id]
             if room_id in self.messages:
                 del self.messages[room_id]

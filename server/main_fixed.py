@@ -7,7 +7,7 @@ import json
 import uuid
 
 # Правильный импорт - room_manager из текущей папки
-from .room_manager import RoomManager
+from room_manager import RoomManager
 
 # ========== СОЗДАНИЕ ПРИЛОЖЕНИЯ ==========
 
@@ -77,12 +77,11 @@ async def websocket_handler(websocket: WebSocket):
     
     print(f"🔌 Client connected: {conn_id}")
     print(f"📊 Total connections: {len(active_connections)}")
+    await send_json(websocket, "rooms_list",  room_manager.get_all_rooms())
     
     try:
         # Отправляем приветствие и список комнат
         await send_json(websocket, "connect", {"connected": True})
-        await send_rooms_list_to_all();
-        print(f"📋 Sent initial rooms to {conn_id} ({room_manager.get_rooms_count()} rooms)")
         
         while True:
             data = await websocket.receive_text()
@@ -94,12 +93,10 @@ async def websocket_handler(websocket: WebSocket):
             
             # 1. ПОЛУЧИТЬ СПИСОК КОМНАТ
             if msg_type == "get_rooms":
-                await send_json(websocket, "rooms_list", {
-                    "rooms": room_manager.get_all_rooms()
-                })
+                await send_json(websocket, "rooms_list",  room_manager.get_all_rooms())
             
             # 2. СОЗДАТЬ КОМНАТУ
-            elif msg_type == "room_created":
+            elif msg_type == "create_room":
                 creator_id = payload.get("creator_id")
                 creator_name = payload.get("creator_name")
                 
@@ -132,6 +129,21 @@ async def websocket_handler(websocket: WebSocket):
                 else:
                     await send_json(websocket, "error", {"message": "Room name already exists"})
             
+            elif msg_type == "update_room":
+                room_id = payload.get("room_id")
+                name = payload.get("name")
+                description = payload.get("description", "")
+                capacity = payload.get("capacity")
+                
+                room = room_manager.get_room(room_id)
+                if room:
+                    room.name = name
+                    room.description = description
+                    room.capacity = capacity
+                    room_manager._add_system_message(room_id, f"✏️ Комната обновлена: {name}")
+                    await send_rooms_list_to_all()
+                else:
+                    await send_json(websocket, "error", {"message": "Cannot edit default room"})
             # 3. ПРИСОЕДИНИТЬСЯ К КОМНАТЕ
             elif msg_type == "user_joined":
                 user_id = payload.get("user_id")
@@ -249,9 +261,18 @@ async def websocket_handler(websocket: WebSocket):
             # 9. PING
             elif msg_type == "ping":
                 await send_json(websocket, "pong", {"timestamp": datetime.now().timestamp()})
+
+                # 11. УДАЛЕНИЕ КОМНАТЫ
+            elif msg_type == "delete_room":
+                print(payload)
+                room_id = payload
+                room = room_manager.get_room(room_id)
+                success = room_manager.delete_room(room_id)
+                if success:
+                    await send_rooms_list_to_all()
+                else:
+                    await send_json(websocket, "error", {"message": "Failed to delete room"})
             
-            else:
-                await send_json(websocket, "error", {"message": f"Unknown type: {msg_type}"})
     
     except WebSocketDisconnect:
         print(f"🔌 Client disconnected: {conn_id}")
@@ -264,9 +285,7 @@ async def websocket_handler(websocket: WebSocket):
             
             room, deleted = room_manager.leave_room(room_id, user_id)
             
-            if deleted:
-                await broadcast_to_all("room_deleted", room_id)
-            elif room:
+            if room:
                 await broadcast_to_room(room_id, "room_update", room.to_dict())
                 await broadcast_to_room(room_id, "user_left", {
                     "room_id": room_id,
@@ -345,7 +364,6 @@ async def delete_room(room_id: str):
     """Удалить комнату"""
     success = room_manager.delete_room(room_id)
     if success:
-        await broadcast_to_all("room_deleted", room_id)
         await send_rooms_list_to_all()
         return {"success": True, "message": "Room deleted"}
     return {"success": False, "message": "Cannot delete default room or room not found"}

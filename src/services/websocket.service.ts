@@ -1,18 +1,20 @@
 // src/services/websocket.service.ts
 import { EventEmitter } from './event-emitter.service';
 
-export type WebSocketEventType = 
+export type WebSocketEventType =
   | 'connect'
   | 'disconnect'
   | 'error'
   | 'message'
   | 'reconnecting'
   // Комнаты
+  | 'delete_room'
+  | 'create_room'
+  | 'update_room'
+  | 'get_rooms'
   | 'room_update'
   | 'user_joined'
   | 'user_left'
-  | 'room_created'
-  | 'room_deleted'
   | 'game_started'
   | 'game_ended'
   | 'word_changed'
@@ -127,11 +129,11 @@ class WebSocketService extends EventEmitter {
   }
 
   private handleMessage(event: MessageEvent): void {
-    console.log('📨 Received message:',event.data)
+    console.log('📨 Received message:', event.data)
     try {
       const message = JSON.parse(event.data) as WebSocketMessage;
       console.log('📨 Received message:', message.type, message.payload);
-      
+
       this.emit('message', message);
       this.emit(message.type, message.payload);
     } catch (error) {
@@ -153,7 +155,7 @@ class WebSocketService extends EventEmitter {
     } else {
       console.warn(`WebSocket not connected, queueing message: ${type}`);
       this.pendingMessages.push({ type, payload });
-      
+
       if (!this.isConnected && !this.manualClose && this.ws?.readyState !== WebSocket.CONNECTING) {
         this.connect();
       }
@@ -163,7 +165,7 @@ class WebSocketService extends EventEmitter {
   private flushPendingMessages(): void {
     const messagesToSend = [...this.pendingMessages];
     this.pendingMessages = [];
-    
+
     for (const msg of messagesToSend) {
       this.send(msg.type, msg.payload);
     }
@@ -188,7 +190,7 @@ class WebSocketService extends EventEmitter {
       (this.config.reconnectInterval || 3000) * Math.pow(1.5, this.reconnectAttempts - 1),
       30000
     );
-    
+
     console.log(`Reconnecting attempt ${this.reconnectAttempts}/${maxAttempts} in ${delay}ms...`);
     this.emit('reconnecting', { attempt: this.reconnectAttempts, maxAttempts, delay });
 
@@ -217,7 +219,7 @@ class WebSocketService extends EventEmitter {
       if (now - lastPong > interval * 2) {
         missedPongs++;
         console.warn(`Heartbeat missed ${missedPongs} time(s)`);
-        
+
         if (missedPongs >= 3) {
           console.error('No heartbeat response, reconnecting...');
           this.ws?.close();
@@ -237,7 +239,7 @@ class WebSocketService extends EventEmitter {
 
     // this.on('pong', handlePong);
     this.heartbeatTimer = window.setInterval(checkHeartbeat, interval);
-    
+
     // (this.heartbeatTimer as any).pongHandler = handlePong;
   }
 

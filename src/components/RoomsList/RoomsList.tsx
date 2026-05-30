@@ -1,25 +1,16 @@
 // src/components/RoomsList/RoomsList.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useAppDispatch, useAppSelector } from '../../store';
-import { selectAllRooms, selectRoom } from '../../store/slices/rooms.slice';
+import { selectAllRooms } from '../../store/slices/rooms.slice';
+import webSocketService from '../../services/websocket.service';
 import { RoomCard } from './RoomCard';
 import { CreateRoomModal } from './CreateRoomModal';
 import '../../styles/components/rooms-list.css';
 
 export const RoomsList: React.FC = () => {
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
   const rooms = useAppSelector(selectAllRooms);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  
-  const handleRoomClick = (roomId: string) => {
-    const room = rooms.find(r => r.id === roomId);
-    if (room && room.current_users < room.capacity) {
-      dispatch(selectRoom(room));
-      navigate(`/room/${roomId}`);
-    }
-  };
 
   const handleCreateRoom = () => {
     setIsCreateModalOpen(true);
@@ -51,7 +42,6 @@ export const RoomsList: React.FC = () => {
             <RoomCard
               key={room.id}
               room={room}
-              onClick={() => handleRoomClick(room.id)}
             />
           ))}
         </div>
