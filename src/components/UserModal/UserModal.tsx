@@ -1,8 +1,8 @@
-// src/components/UserModal.tsx
+// src/components/UserModal/UserModal.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { useAppDispatch, useAppSelector } from '../store';
-import { setUsername, selectUsername, selectIsUsernameValid } from '../features/userSlice';
-import './UserModal.css';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { setUsername, selectUsername, selectIsUsernameValid } from '../../store/slices/user.slice';
+import '../../styles/components/user-modal.css';
 
 interface UserModalProps {
   isOpen: boolean;
@@ -77,7 +77,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Введите имя пользователя</h2>
+          <h2>Добро пожаловать!</h2>
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
         
@@ -105,7 +105,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose }) => {
             <p>ℹ️ Имя будет использоваться для идентификации в комнатах</p>
             <p>💡 Вы можете использовать латиницу, кириллицу, цифры и _</p>
             <p>✅ Допустимая длина: от 2 до 20 символов</p>
-            <p>🆔 После входа вам будет автоматически присвоен уникальный ID</p>
+            <p>🎮 После входа вы сможете создавать и присоединяться к комнатам</p>
           </div>
         </div>
         
@@ -114,7 +114,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose }) => {
             Отмена
           </button>
           <button className="btn-confirm" onClick={handleConfirm}>
-            Подтвердить
+            Начать игру
           </button>
         </div>
       </div>

@@ -1,18 +1,18 @@
-// src/components/Header.tsx
+// src/components/Header/Header.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useAppDispatch, useAppSelector } from '../store';
-import { selectUsername, selectUserStats, clearUsername } from '../features/userSlice';
-import { UserModal } from './UserModal';
-import './Header.css';
-import logo from '../assets/logo.svg'
+import { useAppDispatch, useAppSelector } from '../../store';
+import { selectUsername, clearUsername } from '../../store/slices/user.slice';
+import { UserModal } from '../UserModal/UserModal';
+import { UserMenu } from './UserMenu';
+import logo from '../../assets/logo.svg';
+import '../../styles/components/header.css';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   
   const username = useAppSelector(selectUsername);
-  const userStats = useAppSelector(selectUserStats);
   const isConnected = useAppSelector(state => state.websocket.isConnected);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,51 +34,49 @@ export const Header: React.FC = () => {
     setIsModalOpen(false);
   };
 
+  const getInitials = () => {
+    return username ? username.charAt(0).toUpperCase() : '?';
+  };
+
   return (
     <>
       <header className="app-header">
         <div className="header-container">
           {/* Логотип */}
           <div className="header-logo" onClick={() => navigate('/')}>
-            <img src={logo} className="logo-icon"/>
+            <img src={logo} className="logo-icon" alt="Crocodile Logo" />
             <div className="logo-text">
-              <span className="logo-title">Crocodile</span>
-              <span className="logo-subtitle">Рисуй с друзьями</span>
+              <span className="logo-title">Крокодил</span>
+              <span className="logo-subtitle">Рисуй и угадывай</span>
             </div>
           </div>
 
 
           <div className="header-right">
+            {/* Статус подключения */}
             <div className="connection-status" title={isConnected ? 'Подключено' : 'Отключено'}>
               <div className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`} />
               <span className="status-text">{isConnected ? 'Online' : 'Offline'}</span>
             </div>
 
+            {/* Пользователь */}
             <div className="user-section">
               <div className="user-info" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                <div className="user-avatar">
-                  {username ? username.charAt(0).toUpperCase() : '?'}
+                <div className="user-avatar" style={{ background: `linear-gradient(135deg, #667eea 0%, #764ba2 100%)` }}>
+                  {getInitials()}
                 </div>
                 <div className="user-details">
                   <div className="user-name">{username || 'Гость'}</div>
-                  <div className="user-status">
-                    {userStats.isValid ? 'Активен' : 'Требуется внимание'}
-                  </div>
                 </div>
                 <div className="user-arrow">{isMenuOpen ? '▲' : '▼'}</div>
               </div>
 
               {isMenuOpen && (
-                <div className="user-menu">
-                  <div className="menu-item" onClick={handleOpenModal}>
-                    <span className="menu-icon">✏️</span>
-                    Сменить имя
-                  </div>
-                  <div className="menu-item logout" onClick={handleLogout}>
-                    <span className="menu-icon">🚪</span>
-                    Выйти
-                  </div>
-                </div>
+                <UserMenu
+                  onEditProfile={handleOpenModal}
+                  onLogout={handleLogout}
+                  onClose={() => setIsMenuOpen(false)}
+                />
               )}
             </div>
           </div>

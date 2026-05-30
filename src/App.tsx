@@ -1,19 +1,17 @@
 // src/App.tsx
-import { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router';
 import { useAppSelector } from './store';
-import webSocketService from './services/websocketService';
-import { selectIsUserSet } from './features/userSlice';
+import webSocketService from './services/websocket.service';
+import { selectIsUserSet } from './store/slices/user.slice';
 import { MainLayout } from './layouts/MainLayout';
-import { RoomsList } from './components/RoomsList';
+import { RoomsList } from './components/RoomsList/RoomsList';
 import { RoomDetail } from './components/RoomDetail';
-import { UserModal } from './components/UserModal';
-
+import { UserModal } from './components/UserModal/UserModal';
 
 function App() {
   useEffect(() => {
     webSocketService.connect();
-
     return () => {
       webSocketService.disconnect();
     };
@@ -28,12 +26,10 @@ function App() {
     }
   };
 
-  // Если пользователь не авторизован - показываем только модальное окно
   if (!isUserSet) {
     return <UserModal isOpen={isModalOpen} onClose={handleCloseModal} />;
   }
 
-  // Если пользователь авторизован - показываем основное приложение с WebSocket
   return (
     <>
       <UserModal isOpen={isModalOpen} onClose={handleCloseModal} />

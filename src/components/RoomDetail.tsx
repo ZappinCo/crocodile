@@ -2,11 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useAppDispatch, useAppSelector } from '../store';
-import { selectRoomById, setCurrentRoom, selectCurrentRoomId } from '../features/roomsSlice';
-import { webSocketService } from '../services/websocketService';
-import { selectUserForWebSocket } from '../features/userSlice'
-import { Chat } from './Chat';
-import DrawingCanvas from './DrawingCanvas';
+import { selectRoomById, setCurrentRoom } from '../store/slices/rooms.slice';
+import { webSocketService } from '../services/websocket.service';
+import { selectUserForWebSocket } from '../store/slices/user.slice';
+import { Chat } from './Chat/Chat';
+import { DrawingCanvas } from './DrawingCanvas/DrawingCanvas';
 
 export const RoomDetail: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -15,55 +15,53 @@ export const RoomDetail: React.FC = () => {
 
   const room = useAppSelector(state => selectRoomById(state, roomId || ''));
   const userForWS = useAppSelector(selectUserForWebSocket);
-  const currentRoomId = useAppSelector(selectCurrentRoomId);
   const isConnected = useAppSelector(state => state.websocket.isConnected);
 
   const [isJoining, setIsJoining] = useState(false);
 
-  // При загрузке компонента - подключаемся к комнате
   useEffect(() => {
-    if (roomId && isConnected && !isJoining) {
+    if (roomId && isConnected && !isJoining && room) {
       console.log(`🔌 Joining room: ${roomId}`);
       setIsJoining(true);
 
-      // Отправляем команду на подключение к комнате
       webSocketService.emitEvent('user_joined', {
         room_id: roomId,
-        user_id: userForWS.user_id,      // Используем ID или имя
-        user_name: userForWS.user_name    // Отображаемое имя
+        user_id: userForWS.user_id,
+        user_name: userForWS.user_name
       });
-      // Обновляем Redux состояние
+      
       dispatch(setCurrentRoom(roomId));
     }
 
-    // При размонтировании - выходим из комнаты
     return () => {
-      if (currentRoomId && isConnected) {
-        console.log(`👋 Leaving room: ${currentRoomId}`);
+      if (roomId && isConnected) {
+        console.log(`👋 Leaving room: ${roomId}`);
         webSocketService.emitEvent('user_left', {
-          room_id: currentRoomId,
-          user_id: userForWS.user_id,      // Используем ID или имя
-          user_name: userForWS.user_name    // Отображаемое имя
+          room_id: roomId,
+          user_id: userForWS.user_id,
+          user_name: userForWS.user_name
         });
         dispatch(setCurrentRoom(null));
       }
     };
-  }, [roomId, isConnected, dispatch, userForWS, currentRoomId, isJoining]);
+  }, [roomId, isConnected, dispatch, userForWS, isJoining, room]);
 
   if (!room || !roomId) {
     return (
-      <div>
-        <h2>Room not found</h2>
-        <button onClick={() => navigate('/')}>Back to rooms</button>
+      <div className="rooms-empty">
+        <div className="rooms-empty-icon">🔍</div>
+        <div className="rooms-empty-text">Комната не найдена</div>
+        <button className="create-room-btn" onClick={() => navigate('/')}>
+          Вернуться к списку комнат
+        </button>
       </div>
     );
   }
 
-
   return (
-    <div className='room-container'>
+    <div className="room-container">
       <DrawingCanvas />
-      <Chat roomId={roomId} />
+      <Chat />
     </div>
   );
 };

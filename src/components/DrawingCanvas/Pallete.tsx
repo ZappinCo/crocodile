@@ -1,6 +1,8 @@
-// src/components/Pallete.tsx
+// src/components/DrawingCanvas/Pallete.tsx
 import React from "react";
-import PalleteItem from "./PalleteItem";
+import { PalleteItem } from "./PalleteItem";
+import '../../styles/components/pallete.css';
+
 export type PalleteItemType = 'color' | 'size' | 'eraser' | 'clear' | 'undo' | 'redo';
 
 export interface PalleteItemData {
@@ -31,16 +33,16 @@ const items: PalleteItemData[] = [
 
   // 🛠️ Инструменты
   { type: "clear" },
+  { type: "undo" },
+  { type: "redo" },
 ];
 
-const Pallete: React.FC = () => {
+export const Pallete: React.FC = () => {
   return (
-    <div className="pallete-container frame-rounded">
+    <div className="pallete-container animate-fade-in-down">
       {items.map((data, index) => (
         <PalleteItem key={`${data.type}-${index}`} data={data} />
       ))}
     </div>
   );
 };
-
-export default Pallete;

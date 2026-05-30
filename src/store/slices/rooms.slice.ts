@@ -1,40 +1,38 @@
-// src/features/roomsSlice.ts
-import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 
 export interface Room {
   id: string;
   name: string;
   description: string;
   capacity: number;
+  owner_id:string;
   current_users: number;
   created_at: string;
   updated_at: string;
-}
-
-export interface CreateRoomDTO {
-  name: string;
-  description: string;
-  capacity: number;
-}
-
-export interface UpdateRoomDTO {
-  id: string;
-  name?: string;
-  description?: string;
-  capacity?: number;
+  leader_id: string | null;
+  current_word: string | null;
+  game_active: boolean;
+  users?: string[];
 }
 
 export interface UserJoinedPayload {
   room_id: string;
   user_id: string;
+  user_name: string;
   user_count: number;
+  users?: string[];
+  leader_id?: string;
+  game_active?: boolean;
 }
 
 export interface UserLeftPayload {
   room_id: string;
   user_id: string;
+  user_name: string;
   user_count: number;
+  users?: string[];
+  leader_id?: string;
 }
 
 interface RoomsState {
@@ -57,7 +55,7 @@ const roomsSlice = createSlice({
   name: 'rooms',
   initialState,
   reducers: {
-    // Установка начального списка комнат
+    // Инициализация комнат
     setRooms: (state, action: PayloadAction<Room[]>) => {
       console.log('📦 [roomsSlice] setRooms:', action.payload.length, 'rooms');
       state.rooms = action.payload;
@@ -65,58 +63,78 @@ const roomsSlice = createSlice({
       state.error = null;
     },
 
-    // Обновление комнаты
-    wsUpdateRoom: (state, action: PayloadAction<Room>) => {
-      console.log('🔄 [roomsSlice] wsUpdateRoom:', action.payload.id);
-      const index = state.rooms.findIndex(room => room.id === action.payload.id);
-      if (index !== -1) {
-        state.rooms[index] = action.payload;
-      } else {
-        state.rooms.push(action.payload);
-      }
-      
-      if (state.selectedRoom?.id === action.payload.id) {
-        state.selectedRoom = action.payload;
-      }
-    },
-
     // Пользователь присоединился
-    wsUserJoined: (state, action: PayloadAction<UserJoinedPayload>) => {
-      console.log('👤 [roomsSlice] wsUserJoined:', action.payload);
+    userJoined: (state, action: PayloadAction<UserJoinedPayload>) => {
+      console.log('👤 [roomsSlice] userJoined:', action.payload.user_name);
       const room = state.rooms.find(r => r.id === action.payload.room_id);
       if (room) {
         room.current_users = action.payload.user_count;
+        if (action.payload.users) {
+          room.users = action.payload.users;
+        }
+        if (action.payload.leader_id) {
+          room.leader_id = action.payload.leader_id;
+        }
+        if (action.payload.game_active !== undefined) {
+          room.game_active = action.payload.game_active;
+        }
       }
+      
       if (state.selectedRoom?.id === action.payload.room_id) {
         state.selectedRoom.current_users = action.payload.user_count;
+        if (action.payload.users) {
+          state.selectedRoom.users = action.payload.users;
+        }
+        if (action.payload.leader_id) {
+          state.selectedRoom.leader_id = action.payload.leader_id;
+        }
+        if (action.payload.game_active !== undefined) {
+          state.selectedRoom.game_active = action.payload.game_active;
+        }
       }
     },
 
     // Пользователь вышел
-    wsUserLeft: (state, action: PayloadAction<UserLeftPayload>) => {
-      console.log('👋 [roomsSlice] wsUserLeft:', action.payload);
+    userLeft: (state, action: PayloadAction<UserLeftPayload>) => {
+      console.log('👋 [roomsSlice] userLeft:', action.payload.user_name);
       const room = state.rooms.find(r => r.id === action.payload.room_id);
       if (room) {
         room.current_users = action.payload.user_count;
+        if (action.payload.users) {
+          room.users = action.payload.users;
+        }
+        if (action.payload.leader_id) {
+          room.leader_id = action.payload.leader_id;
+        }
       }
+      
       if (state.selectedRoom?.id === action.payload.room_id) {
         state.selectedRoom.current_users = action.payload.user_count;
+        if (action.payload.users) {
+          state.selectedRoom.users = action.payload.users;
+        }
+        if (action.payload.leader_id) {
+          state.selectedRoom.leader_id = action.payload.leader_id;
+        }
       }
     },
 
-    // Создана новая комната
-    wsRoomCreated: (state, action: PayloadAction<Room>) => {
-      console.log('🏠 [roomsSlice] wsRoomCreated:', action.payload);
-      state.rooms.push(action.payload);
-    },
-
-    // Удалена комната
-    wsRoomDeleted: (state, action: PayloadAction<string>) => {
-      console.log('🗑️ [roomsSlice] wsRoomDeleted:', action.payload);
-      state.rooms = state.rooms.filter(room => room.id !== action.payload);
-      if (state.selectedRoom?.id === action.payload) {
-        state.selectedRoom = null;
-        state.currentRoomId = null;
+    // Обновление статуса игры
+    gameStatusChanged: (state, action: PayloadAction<{ room_id: string; game_active: boolean; current_word?: string | null }>) => {
+      console.log('🎮 [roomsSlice] gameStatusChanged:', action.payload);
+      const room = state.rooms.find(r => r.id === action.payload.room_id);
+      if (room) {
+        room.game_active = action.payload.game_active;
+        if (action.payload.current_word !== undefined) {
+          room.current_word = action.payload.current_word;
+        }
+      }
+      
+      if (state.selectedRoom?.id === action.payload.room_id) {
+        state.selectedRoom.game_active = action.payload.game_active;
+        if (action.payload.current_word !== undefined) {
+          state.selectedRoom.current_word = action.payload.current_word;
+        }
       }
     },
 
@@ -126,7 +144,7 @@ const roomsSlice = createSlice({
       state.selectedRoom = action.payload;
     },
 
-    // Установка текущей комнаты для WebSocket
+    // Установка текущей комнаты
     setCurrentRoom: (state, action: PayloadAction<string | null>) => {
       console.log('🔌 [roomsSlice] setCurrentRoom:', action.payload);
       state.currentRoomId = action.payload;
@@ -157,11 +175,9 @@ const roomsSlice = createSlice({
 // Экспорт действий
 export const {
   setRooms,
-  wsUpdateRoom,
-  wsUserJoined,
-  wsUserLeft,
-  wsRoomCreated,
-  wsRoomDeleted,
+  userJoined,
+  userLeft,
+  gameStatusChanged,
   selectRoom,
   setCurrentRoom,
   clearSelectedRoom,
@@ -170,14 +186,8 @@ export const {
   setError,
 } = roomsSlice.actions;
 
-// Экспорт редюсера
-export default roomsSlice.reducer;
-
-// ========== СЕЛЕКТОРЫ ==========
-
-// Базовые селекторы
 export const selectAllRooms = (state: { rooms: RoomsState }) => state.rooms.rooms;
-export const selectSelectedRoom = (state: { rooms: RoomsState }) => state.rooms.selectedRoom;
+export const selectCurrentRoom = (state: { rooms: RoomsState }) => state.rooms.selectedRoom;
 export const selectCurrentRoomId = (state: { rooms: RoomsState }) => state.rooms.currentRoomId;
 export const selectRoomsLoading = (state: { rooms: RoomsState }) => state.rooms.isLoading;
 export const selectRoomsError = (state: { rooms: RoomsState }) => state.rooms.error;
@@ -185,28 +195,4 @@ export const selectRoomsError = (state: { rooms: RoomsState }) => state.rooms.er
 export const selectRoomById = (state: { rooms: RoomsState }, roomId: string) => {
   return state.rooms.rooms.find(room => room.id === roomId);
 };
-
-export const selectAvailableRooms = (state: { rooms: RoomsState }) => {
-  return state.rooms.rooms.filter(room => room.current_users < room.capacity);
-};
-
-export const selectFullRooms = (state: { rooms: RoomsState }) => {
-  return state.rooms.rooms.filter(room => room.current_users >= room.capacity);
-};
-
-export const selectRoomsStatistics = (state: { rooms: RoomsState }) => {
-  const rooms = state.rooms.rooms;
-  const totalRooms = rooms.length;
-  const totalCapacity = rooms.reduce((sum, room) => sum + room.capacity, 0);
-  const totalUsers = rooms.reduce((sum, room) => sum + room.current_users, 0);
-  const occupancyRate = totalCapacity > 0 ? (totalUsers / totalCapacity) * 100 : 0;
-  
-  return {
-    totalRooms,
-    totalCapacity,
-    totalUsers,
-    occupancyRate: Math.round(occupancyRate),
-    availableRoomsCount: rooms.filter(r => r.current_users < r.capacity).length,
-    fullRoomsCount: rooms.filter(r => r.current_users >= r.capacity).length,
-  };
-};
+export default roomsSlice.reducer;
