@@ -1,4 +1,3 @@
-// src/components/Chat/Chat.tsx
 import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { sendMessage, requestHistory, setActiveRoom, setLoading, selectIsLoading, selectMessages } from '../../store/slices/chat.slice';
@@ -27,7 +26,6 @@ export const Chat = () => {
 
   const { containerRef, handleScroll, autoScroll } = useAutoScroll([messages]);
 
-  // Инициализация чата
   useEffect(() => {
     if (room?.id && isConnected) {
       dispatch(setActiveRoom(room.id));
@@ -57,7 +55,6 @@ export const Chat = () => {
     }
   };
 
-  // Отображение загаданного слова для ведущего
   const renderCurrentWord = () => {
     const currentWord = room?.current_word;
 
@@ -74,7 +71,6 @@ export const Chat = () => {
   };
 
   if (!room) {
-    console.log("chat room is null")
     return null;
   }
 
@@ -106,7 +102,7 @@ export const Chat = () => {
     <div className="chat-container">
       <div className="chat-header">
         <div className="chat-header-info">
-          <span className="chat-header-title">{room.name}</span>
+          <span className="chat-header-title">{room.name}{room?.leader_id}</span>
         </div>
         <div className="chat-header-stats">
           <span className="stat-item">
@@ -184,7 +180,6 @@ export const Chat = () => {
   );
 };
 
-// Вспомогательная функция для группировки сообщений по датам
 function groupMessagesByDate(messages: any[]) {
   const groups: Record<string, any[]> = {};
 

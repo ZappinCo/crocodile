@@ -80,8 +80,6 @@ async def websocket_handler(websocket: WebSocket):
     await send_json(websocket, "rooms_list",  room_manager.get_all_rooms())
     
     try:
-        # Отправляем приветствие и список комнат
-        await send_json(websocket, "connect", {"connected": True})
         
         while True:
             data = await websocket.receive_text()
@@ -150,10 +148,6 @@ async def websocket_handler(websocket: WebSocket):
                 user_id = payload.get("user_id")
                 user_name = payload.get("user_name", user_id)
                 room_id = payload.get("room_id")
-
-                info = active_connections.get(websocket)
-                info["room_id"] = room_id
-                info["user_id"] = user_id
                 
                 room, error = room_manager.join_room(room_id, user_id, user_name)
                 print("user_joined")
@@ -213,18 +207,15 @@ async def websocket_handler(websocket: WebSocket):
                 user_id = payload.get("userId")
                 user_name = payload.get("userName")
                 text = payload.get("text")
-                is_guess = payload.get("isGuess", False)
                 
-                result = room_manager.add_message(room_id, user_id, user_name, text, is_guess)
+                result,isGuess = room_manager.add_message(room_id, user_id, user_name, text)
                 
                 if result:
                     print("broadcast_to_room")
-                    await broadcast_to_room(room_id, "new_message", result.to_dict())
-                    
-                    if "угадал" in result.text:
-                        room = room_manager.get_room(room_id)
-                        if room:
-                            await broadcast_to_room(room_id, "room_update", room.to_dict())
+                    await broadcast_to_all("new_message", result.to_dict())
+                if isGuess:
+                    print("isGuess")
+                    await broadcast_to_all("room_update", room.to_dict())
             
             # 6. ИСТОРИЯ СООБЩЕНИЙ
             elif msg_type == "request_history":
@@ -250,6 +241,97 @@ async def websocket_handler(websocket: WebSocket):
                     await send_rooms_list_to_all()
                 else:
                     await send_json(websocket, "error", {"message": "Failed to delete room"})
+                    
+            # 7. НОВАЯ ЛИНИЯ (рисование)
+            elif msg_type == "add_stroke":
+                print(payload)
+                room_id = payload.get("roomId")
+                user_id = payload.get("userId")
+                user_name = payload.get("userName")
+                
+                if room_id and payload:
+                    room = room_manager.get_room(room_id)
+                    # Только ведущий может рисовать
+                    if room and room.leader_id == user_id:
+                        stroke = room_manager.add_stroke_to_room(room_id, payload)
+                        if stroke:
+                            # Отправляем новую линию всем в комнате
+                            await broadcast_to_room(room_id, "draw_stroke", {
+                                "stroke": stroke.to_dict(),
+                                "points":stroke.to_dict()["points"],
+                                "brush":stroke.to_dict()["brush"],
+                                "userId": user_id,
+                                "userName": user_name
+                            })
+                            print(f"🎨 Stroke added to room {room_id} by {user_name}")
+
+            # 8. ОЧИСТИТЬ ХОЛСТ
+            elif msg_type == "clear_canvas":
+                room_id = payload.get("roomId")
+                user_id = payload.get("userId")
+                user_name = payload.get("userName")
+                
+                if room_id:
+                    room = room_manager.get_room(room_id)
+                    # Только ведущий может очищать холст
+                    if room and room.leader_id == user_id:
+                        room_manager.clear_room_canvas(room_id)
+                        # Отправляем команду очистки всем в комнате
+                        await broadcast_to_room(room_id, "clear_canvas", {
+                            "userId": user_id,
+                            "userName": user_name
+                        })
+                        print(f"🗑️ Canvas cleared in room {room_id} by {user_name}")
+
+            # 9. ОТМЕНИТЬ (UNDO)
+            elif msg_type == "undo_stroke":
+                room_id = payload.get("roomId")
+                user_id = payload.get("userId")
+                user_name = payload.get("userName")
+                
+                if room_id:
+                    room = room_manager.get_room(room_id)
+                    # Только ведущий может отменять
+                    if room and room.leader_id == user_id:
+                        removed = room_manager.undo_room_stroke(room_id)
+                        if removed:
+                            await broadcast_to_room(room_id, "undo_stroke", {
+                                "strokeId": removed.id,
+                                "userId": user_id,
+                                "userName": user_name
+                            })
+                            print(f"↩️ Undo in room {room_id} by {user_name}")
+
+            # 10. ВЕРНУТЬ (REDO)
+            elif msg_type == "redo_stroke":
+                room_id = payload.get("roomId")
+                user_id = payload.get("userId")
+                user_name = payload.get("userName")
+                
+                if room_id:
+                    room = room_manager.get_room(room_id)
+                    # Только ведущий может возвращать
+                    if room and room.leader_id == user_id:
+                        restored = room_manager.redo_room_stroke(room_id)
+                        if restored:
+                            await broadcast_to_room(room_id, "redo_stroke", {
+                                "stroke": restored.to_dict(),
+                                "userId": user_id,
+                                "userName": user_name
+                            })
+                            print(f"↪️ Redo in room {room_id} by {user_name}")
+
+            # 11. ЗАПРОСИТЬ ХОЛСТ (при подключении нового пользователя)
+            elif msg_type == "request_canvas":
+                room_id = payload.get("roomId")
+                if room_id:
+                    strokes = room_manager.get_room_strokes(room_id)
+                    await send_json(websocket, "canvas_state", {
+                        "strokes": strokes,
+                        "room_id": room_id
+                    })
+                    print(f"🎨 Canvas state sent to {conn_id} for room {room_id}")
+                        
             
     
     except WebSocketDisconnect:

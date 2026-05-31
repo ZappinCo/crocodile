@@ -1,4 +1,3 @@
-// src/components/RoomsList/RoomCard.tsx
 import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { selectUsername, selectUserId } from '../../store/slices/user.slice';
@@ -22,10 +21,9 @@ export const RoomCard = ({ room }: { room: Room }) => {
   const freeSpaces = room.capacity - room.current_users;
   const isFull = freeSpaces === 0;
   const occupancyPercent = (room.current_users / room.capacity) * 100;
-  const isCreator = room.owner_id == currentUserId; // Пользовательские комнаты может редактировать создатель
+  const isCreator = room.owner_id == currentUserId;
   const canEdit = isCreator && !room.game_active;
 
-  // Форматирование даты
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
@@ -47,7 +45,6 @@ export const RoomCard = ({ room }: { room: Room }) => {
     }
   };
 
-  // Редактирование комнаты
   const handleEdit = () => {
     if (!canEdit) return;
     setIsEditing(true);
@@ -78,7 +75,6 @@ export const RoomCard = ({ room }: { room: Room }) => {
     setIsEditing(false);
   };
 
-  // Удаление комнаты
   const handleDelete = () => {
     if (!canEdit) return;
     setIsDeleting(true);
@@ -92,7 +88,6 @@ export const RoomCard = ({ room }: { room: Room }) => {
     setIsDeleting(false);
   };
 
-  // Если в режиме редактирования
   if (isEditing) {
     return (
       <div className="room-card editing animate-fade-in">
@@ -144,7 +139,6 @@ export const RoomCard = ({ room }: { room: Room }) => {
     );
   }
 
-  // Если в режиме подтверждения удаления
   if (isDeleting) {
     return (
       <div className="room-card deleting animate-fade-in">

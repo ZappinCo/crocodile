@@ -1,4 +1,3 @@
-// src/components/RoomsList/CreateRoomModal.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { webSocketService } from '../../services/websocket.service';

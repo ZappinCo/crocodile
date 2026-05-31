@@ -1,4 +1,3 @@
-// src/components/RoomsList/RoomsList.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useAppDispatch, useAppSelector } from '../../store';

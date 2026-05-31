@@ -5,7 +5,6 @@ import { BrowserRouter } from 'react-router';
 import { store } from './store';
 import App from './App';
 
-// Импорт глобальных стилей
 import './styles/global.css';
 import './styles/layouts/main-layout.css';
 import './styles/components/chat.css';

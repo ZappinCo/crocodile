@@ -1,4 +1,3 @@
-// src/App.tsx
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router';
 import { useAppSelector } from './store';

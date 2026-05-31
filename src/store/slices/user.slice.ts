@@ -1,4 +1,3 @@
-// src/store/slices/user.slice.ts
 import { createSlice, createSelector } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 
@@ -56,13 +55,9 @@ const userSlice = createSlice({
         state.id = generateUserId();
       }
 
-      // Сохраняем в localStorage
       localStorage.setItem('username', trimmedName);
       localStorage.setItem('userId', state.id);
       localStorage.setItem('userAvatarColor', state.avatarColor);
-
-      console.log('👤 Username set:', trimmedName);
-      console.log('🆔 User ID:', state.id);
     },
 
     clearUsername: (state) => {
@@ -76,7 +71,6 @@ const userSlice = createSlice({
       localStorage.removeItem('userAvatarColor');
       localStorage.removeItem('userStats');
 
-      console.log('👤 Username cleared');
     },
 
     editUsername: (state, action: PayloadAction<string>) => {
@@ -84,7 +78,6 @@ const userSlice = createSlice({
       if (trimmedName) {
         state.username = trimmedName;
         localStorage.setItem('username', trimmedName);
-        console.log('👤 Username edited:', trimmedName);
       }
     },
 
@@ -105,7 +98,6 @@ export const {
   resetUser
 } = userSlice.actions;
 
-// Селекторы
 export const selectUserId = (state: { user: User }) => state.user.id;
 export const selectUsername = (state: { user: User }) => state.user.username;
 export const selectIsUserSet = (state: { user: User }) => state.user.isSet;

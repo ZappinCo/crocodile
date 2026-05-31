@@ -1,4 +1,3 @@
-// src/components/DrawingCanvas/Pallete.tsx
 import React from "react";
 import { PalleteItem } from "./PalleteItem";
 import '../../styles/components/pallete.css';
@@ -12,26 +11,23 @@ export interface PalleteItemData {
 }
 
 const items: PalleteItemData[] = [
-  // 🎨 Цвета
-  { type: "color", color: "#DC143C" },  // Красный
-  { type: "color", color: "#FF6103" },  // Оранжевый
-  { type: "color", color: "#FFD700" },  // Желтый
-  { type: "color", color: "#00A550" },  // Зеленый
-  { type: "color", color: "#008B8B" },  // Бирюзовый
-  { type: "color", color: "#120A8F" },  // Синий
-  { type: "color", color: "#E32636" },  // Бордовый
-  { type: "color", color: "#CC7722" },  // Коричневый
-  { type: "color", color: "#35281E" },  // Темно-коричневый
-  { type: "color", color: "#ffffff" },  // Белый (ластик)
+  { type: "color", color: "#DC143C" },  
+  { type: "color", color: "#FF6103" },  
+  { type: "color", color: "#FFD700" },  
+  { type: "color", color: "#00A550" },  
+  { type: "color", color: "#008B8B" },  
+  { type: "color", color: "#120A8F" },  
+  { type: "color", color: "#E32636" },  
+  { type: "color", color: "#CC7722" },  
+  { type: "color", color: "#35281E" },  
+  { type: "color", color: "#ffffff" },  
 
-  // 📏 Размеры
   { type: "size", size: 0.05 },
   { type: "size", size: 0.1 },
   { type: "size", size: 0.2 },
   { type: "size", size: 0.3 },
   { type: "size", size: 0.4 },
 
-  // 🛠️ Инструменты
   { type: "clear" },
   { type: "undo" },
   { type: "redo" },

@@ -23,23 +23,19 @@ const websocketSlice = createSlice({
       state.isConnected = action.payload.connected;
       state.error = null;
       state.reconnectAttempts = 0;
-      console.log('🔌 WebSocket connected');
     },
     
     disconnected: (state, action: PayloadAction<{ connected: boolean; code?: number; reason?: string }>) => {
       state.isConnected = action.payload.connected;
-      console.log('🔌 WebSocket disconnected:', action.payload.reason);
     },
     
     websocketError: (state, action: PayloadAction<string>) => {
       state.error = action.payload;
       state.isConnected = false;
-      console.error('🔌 WebSocket error:', action.payload);
     },
     
     reconnecting: (state, action: PayloadAction<{ attempt: number }>) => {
       state.reconnectAttempts = action.payload.attempt;
-      console.log(`🔌 Reconnecting attempt ${action.payload.attempt}`);
     },
     
     pong: (state, action: PayloadAction<{ timestamp: number }>) => {
@@ -61,7 +57,6 @@ export const {
 
 export default websocketSlice.reducer;
 
-// Селекторы
 export const selectIsConnected = (state: { websocket: WebSocketState }) => state.websocket.isConnected;
 export const selectWebSocketError = (state: { websocket: WebSocketState }) => state.websocket.error;
 export const selectReconnectAttempts = (state: { websocket: WebSocketState }) => state.websocket.reconnectAttempts;

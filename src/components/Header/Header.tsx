@@ -1,8 +1,7 @@
-// src/components/Header/Header.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAppDispatch, useAppSelector } from '../../store';
-import { selectUsername, clearUsername } from '../../store/slices/user.slice';
+import { selectUsername, clearUsername, selectUserId } from '../../store/slices/user.slice';
 import { UserModal } from '../UserModal/UserModal';
 import { UserMenu } from './UserMenu';
 import logo from '../../assets/logo.svg';
@@ -13,6 +12,7 @@ export const Header: React.FC = () => {
   const dispatch = useAppDispatch();
   
   const username = useAppSelector(selectUsername);
+  const userid = useAppSelector(selectUserId);
   const isConnected = useAppSelector(state => state.websocket.isConnected);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,6 +67,7 @@ export const Header: React.FC = () => {
                 </div>
                 <div className="user-details">
                   <div className="user-name">{username || 'Гость'}</div>
+                  <div className="user-name">{userid}</div>
                 </div>
                 <div className="user-arrow">{isMenuOpen ? '▲' : '▼'}</div>
               </div>

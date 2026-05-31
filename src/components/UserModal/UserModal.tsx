@@ -1,4 +1,3 @@
-// src/components/UserModal/UserModal.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { setUsername, selectUsername, selectIsUsernameValid } from '../../store/slices/user.slice';

@@ -33,14 +33,14 @@ export interface RoomCreatePayload {
 
 interface RoomsState {
   rooms: Room[];
-  selectedRoom: Room | null;
+  selectedRoomId: string | null;
   isLoading: boolean;
   error: string | null;
 }
 
 const initialState: RoomsState = {
   rooms: [],
-  selectedRoom: null,
+  selectedRoomId: null,
   isLoading: false,
   error: null,
 };
@@ -49,41 +49,27 @@ const roomsSlice = createSlice({
   name: 'rooms',
   initialState,
   reducers: {
-    // Инициализация комнат
     setRooms: (state, action: PayloadAction<Room[]>) => {
-      console.log('📦 [roomsSlice] setRooms:', action.payload.length, 'rooms');
       state.rooms = action.payload;
       state.isLoading = false;
       state.error = null;
     },
-    // Пользователь присоединился
     userJoined: (state, action: PayloadAction<UserMovePayload>) => {
-      console.log('👤 [roomsSlice] userJoined:', action.payload.user_name);
-      const room = state.rooms.find(r => r.id === action.payload.room_id);
-      if (room) {
-        state.selectedRoom = room;
-      }
+      state.selectedRoomId = action.payload.room_id;
     },
 
-    // Пользователь вышел
     userLeft: (state, action: PayloadAction<UserMovePayload>) => {
-      console.log('👋 [roomsSlice] userLeft:', action.payload.user_name);
-      const room = state.rooms.find(r => r.id === action.payload.room_id);
-      if (room === state.selectedRoom) {
-        state.selectedRoom = null;
-      }
+      state.selectedRoomId = null;
     },
 
     deleteRoom: (state, action: PayloadAction<string>) => {
-      console.log('🎮 [roomsSlice] deleteRoom:', action.payload);
       state.rooms = state.rooms.filter(room => room.id !== action.payload);
-      if (state.selectedRoom?.id === action.payload) {
-        state.selectedRoom = null;
+      if (state.selectedRoomId === action.payload) {
+        state.selectedRoomId = null;
       }
     },
 
     updateRoom: (state, action: PayloadAction<Room>) => {
-      console.log('🎮 [roomsSlice] updateRoom:', action);
       const index = state.rooms.findIndex(room => room.id === action.payload.id);
       if (index !== -1) {
         state.rooms[index] = action.payload;
@@ -91,30 +77,9 @@ const roomsSlice = createSlice({
     },
 
     editRoom: (state, action: PayloadAction<RoomCreatePayload>) => {
-      console.log('🎮 [roomsSlice] createRoom:', action.payload);
     },
 
     createRoom: (state, action: PayloadAction<RoomCreatePayload>) => {
-      console.log('🎮 [roomsSlice] createRoom:', action.payload);
-    },
-
-    // Обновление статуса игры
-    gameStatusChanged: (state, action: PayloadAction<{ room_id: string; game_active: boolean; current_word?: string | null }>) => {
-      console.log('🎮 [roomsSlice] gameStatusChanged:', action.payload);
-      const room = state.rooms.find(r => r.id === action.payload.room_id);
-      if (room) {
-        room.game_active = action.payload.game_active;
-        if (action.payload.current_word !== undefined) {
-          room.current_word = action.payload.current_word;
-        }
-      }
-
-      if (state.selectedRoom?.id === action.payload.room_id) {
-        state.selectedRoom.game_active = action.payload.game_active;
-        if (action.payload.current_word !== undefined) {
-          state.selectedRoom.current_word = action.payload.current_word;
-        }
-      }
     },
 
     clearError: (state) => {
@@ -132,7 +97,6 @@ const roomsSlice = createSlice({
   },
 });
 
-// Экспорт действий
 export const {
   setRooms,
   userJoined,
@@ -141,14 +105,15 @@ export const {
   createRoom,
   updateRoom,
   editRoom,
-  gameStatusChanged,
   clearError,
   setLoading,
   setError,
 } = roomsSlice.actions;
 
 export const selectAllRooms = (state: { rooms: RoomsState }) => state.rooms.rooms;
-export const selectCurrentRoom = (state: { rooms: RoomsState }) => state.rooms.selectedRoom;
+export const selectCurrentRoom = (state: { rooms: RoomsState }) => {
+  return state.rooms.rooms.find(room => room.id === state.rooms.selectedRoomId);
+};
 export const selectRoomsLoading = (state: { rooms: RoomsState }) => state.rooms.isLoading;
 export const selectRoomsError = (state: { rooms: RoomsState }) => state.rooms.error;
 

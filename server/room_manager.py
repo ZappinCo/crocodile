@@ -1,19 +1,57 @@
 # app/room_manager.py
 import uuid
 import random
-from typing import Dict, List, Optional
+import json
+from typing import Dict, List, Optional, Any
 from datetime import datetime
 
 
+class Point:
+    """Точка для рисования"""
+    def __init__(self, x: float, y: float):
+        self.x = x
+        self.y = y
+
+    def to_dict(self):
+        return {"x": self.x, "y": self.y}
+
+    @staticmethod
+    def from_dict(data: dict):
+        return Point(data.get("x", 0), data.get("y", 0))
+
+
+class Stroke:
+    """Линия (серия точек)"""
+    def __init__(self, id: str, points: List[Point], brush: dict):
+        self.id = id
+        self.points = points
+        self.brush = brush
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "points": [p.to_dict() for p in self.points],
+            "brush": self.brush
+        }
+
+    @staticmethod
+    def from_dict(data: dict):
+        points = [Point.from_dict(p) for p in data.get("points", [])]
+        return Stroke(
+            id=data.get("id", str(uuid.uuid4())),
+            points=points,
+            brush=data.get("brush", {"color": "#000000", "size": 0.2, "brushType": "round", "eraser": False})
+        )
+
+
 class Message:
-    def __init__(self, id: str, roomId: str, userId: str, userName: str, text: str, timestamp: str, isGuess: bool = False):
+    def __init__(self, id: str, roomId: str, userId: str, userName: str, text: str, timestamp: str):
         self.id = id
         self.roomId = roomId
         self.userId = userId
         self.userName = userName
         self.text = text
         self.timestamp = timestamp
-        self.isGuess = isGuess
 
     def to_dict(self):
         return {
@@ -23,7 +61,6 @@ class Message:
             "userName": self.userName,
             "text": self.text,
             "timestamp": self.timestamp,
-            "isGuess": self.isGuess
         }
 
 
@@ -41,6 +78,11 @@ class Room:
         self.game_active = False
         self.current_word: Optional[str] = None
         self.words_pool = ["кот", "собака", "дом", "машина", "солнце", "луна", "цветок", "дерево", "книга", "компьютер"]
+        
+        # ========== НОВОЕ: Хранение линий рисования ==========
+        self.strokes: List[Stroke] = []
+        self.canvas_history: List[str] = []
+        self.canvas_future: List[str] = []
 
     def to_dict(self):
         return {
@@ -85,10 +127,13 @@ class Room:
             self.current_word = random.choice(self.words_pool)
 
         if self.current_users == 0:
-            self.leader_id = ''
-            self.leader_name = ''
-            self.current_word = random.choice(self.words_pool)
+            self.leader_id = None
+            self.leader_name = None
+            self.current_word = None
+            # Очищаем холст когда комната пустая
+            self.clear_canvas()
         
+        return True
 
     def get_user_name(self, user_id: str) -> str:
         return self.users.get(user_id, user_id)
@@ -106,8 +151,83 @@ class Room:
             self.leader_id = user_id
             self.leader_name = self.users.get(user_id, user_id)
             self.current_word = random.choice(self.words_pool)
+            # Новая игра - очищаем холст
+            self.clear_canvas()
             return True
         return False
+
+    # ========== НОВЫЕ МЕТОДЫ ДЛЯ РИСОВАНИЯ ==========
+    
+    def add_stroke(self, stroke_data: dict) -> Stroke:
+        """Добавить новую линию"""
+        stroke = Stroke(
+            id=str(uuid.uuid4()),
+            points=[Point.from_dict(p) for p in stroke_data.get("points", [])],
+            brush=stroke_data.get("brush", {"color": "#000000", "size": 0.2, "brushType": "round", "eraser": False})
+        )
+        
+        # Сохраняем в историю
+        self.canvas_history.append(self.get_strokes_json())
+        self.canvas_future = []
+        
+        self.strokes.append(stroke)
+        return stroke
+
+    def get_strokes(self) -> List[dict]:
+        """Получить все линии"""
+        return [stroke.to_dict() for stroke in self.strokes]
+
+    def get_strokes_json(self) -> str:
+        """Получить все линии в JSON формате"""
+        return json.dumps(self.get_strokes())
+
+    def clear_canvas(self):
+        """Очистить холст"""
+        if self.strokes:
+            self.canvas_history.append(self.get_strokes_json())
+            self.strokes = []
+            self.canvas_future = []
+
+    def undo_stroke(self) -> Optional[Stroke]:
+        """Отменить последнюю линию"""
+        if len(self.strokes) == 0:
+            return None
+        
+        # Сохраняем текущее состояние в future
+        self.canvas_future.append(self.get_strokes_json())
+        
+        # Удаляем последний штрих
+        removed = self.strokes.pop()
+        
+        return removed
+
+    def redo_stroke(self) -> Optional[Stroke]:
+        """Вернуть отмененную линию"""
+        if len(self.canvas_future) == 0:
+            return None
+        
+        # Восстанавливаем состояние из future
+        future_state = json.loads(self.canvas_future.pop())
+        
+        # Находим новые штрихи
+        old_strokes_ids = {s.id for s in self.strokes}
+        new_strokes = []
+        
+        for stroke_dict in future_state:
+            if stroke_dict.get("id") not in old_strokes_ids:
+                new_strokes.append(Stroke.from_dict(stroke_dict))
+        
+        # Добавляем восстановленные штрихи
+        for stroke in new_strokes:
+            self.strokes.append(stroke)
+        
+        return new_strokes[0] if new_strokes else None
+
+    def load_strokes(self, strokes_data: List[dict]):
+        """Загрузить линии (для восстановления состояния)"""
+        self.strokes = [Stroke.from_dict(s) for s in strokes_data]
+        self.canvas_history = []
+        self.canvas_future = []
 
 
 class RoomManager:
@@ -139,10 +259,11 @@ class RoomManager:
 
     def create_room(self, name: str, description: str, capacity: int, creator_id: str, creator_name: str):
         for room in self.rooms.values():
-            if room.name == name and not room.is_default:
+            if room.name == name:
                 return None
         
         room = Room(name, description, capacity, creator_id)
+        room.add_user(creator_id, creator_name)
         self.rooms[room.id] = room
         self.messages[room.id] = []
         
@@ -151,7 +272,7 @@ class RoomManager:
 
     def delete_room(self, room_id: str) -> bool:
         room = self.rooms.get(room_id)
-        if room and not room.owner_id == "system":
+        if room and room.owner_id != "system":
             del self.rooms[room_id]
             if room_id in self.messages:
                 del self.messages[room_id]
@@ -163,7 +284,6 @@ class RoomManager:
         if not room:
             return None, "Room not found"
         
-        
         if room.add_user(user_id, user_name):
             self._add_system_message(room_id, f"✨ {user_name} присоединился!")
             return room, None
@@ -174,16 +294,12 @@ class RoomManager:
         if not room:
             return None, False
         
-        user_name = room.get_user_name(user_name)
         room.remove_user(user_id)
-        
-        
         self._add_system_message(room_id, f"👋 {user_name} покинул комнату")
-        
         
         return room, False
 
-    def add_message(self, room_id: str, user_id: str, user_name: str, text: str, is_guess: bool = False):
+    def add_message(self, room_id: str, user_id: str, user_name: str, text: str):
         room = self.rooms.get(room_id)
         if not room:
             return None
@@ -195,17 +311,14 @@ class RoomManager:
             userName=user_name,
             text=text,
             timestamp=datetime.now().isoformat(),
-            isGuess=is_guess
         )
         
         self.messages[room_id].append(msg)
         
-        if is_guess and room.check_guess(user_id, text):
-            winner_name = room.get_user_name(user_id)
-            self._add_system_message(room_id, f"🎉 {winner_name} угадал слово! Новый ведущий: {room.leader_name}")
-            self._add_system_message(room_id, f"🔤 Новое слово: {room.current_word}")
+        isGuess = room.check_guess(user_id, text)
+
         
-        return msg
+        return msg,isGuess
 
     def get_messages(self, room_id: str, limit: int = 50) -> List[dict]:
         msgs = self.messages.get(room_id, [])
@@ -223,3 +336,41 @@ class RoomManager:
         if room_id not in self.messages:
             self.messages[room_id] = []
         self.messages[room_id].append(msg)
+
+    # ========== НОВЫЕ МЕТОДЫ ДЛЯ РИСОВАНИЯ ==========
+    
+    def add_stroke_to_room(self, room_id: str, stroke_data: dict) -> Optional[Stroke]:
+        """Добавить линию в комнату"""
+        room = self.rooms.get(room_id)
+        if room:
+            return room.add_stroke(stroke_data)
+        return None
+
+    def get_room_strokes(self, room_id: str) -> List[dict]:
+        """Получить все линии комнаты"""
+        room = self.rooms.get(room_id)
+        if room:
+            return room.get_strokes()
+        return []
+
+    def clear_room_canvas(self, room_id: str) -> bool:
+        """Очистить холст комнаты"""
+        room = self.rooms.get(room_id)
+        if room:
+            room.clear_canvas()
+            return True
+        return False
+
+    def undo_room_stroke(self, room_id: str) -> Optional[Stroke]:
+        """Отменить последнюю линию в комнате"""
+        room = self.rooms.get(room_id)
+        if room:
+            return room.undo_stroke()
+        return None
+
+    def redo_room_stroke(self, room_id: str) -> Optional[Stroke]:
+        """Вернуть отмененную линию в комнате"""
+        room = self.rooms.get(room_id)
+        if room:
+            return room.redo_stroke()
+        return None

@@ -1,4 +1,3 @@
-// src/services/event-emitter.service.ts
 type EventHandler = (...args: any[]) => void;
 
 export class EventEmitter {
@@ -11,15 +10,8 @@ export class EventEmitter {
     }
     
     const handlers = this.events.get(event)!;
-    
-    // Проверка на превышение лимита слушателей
-    if (handlers.size >= this.maxListeners) {
-      console.warn(`MaxListeners exceeded for event "${event}". Use setMaxListeners() to increase limit.`);
-    }
-    
     handlers.add(handler);
     
-    // Возвращаем функцию для отписки
     return () => this.off(event, handler);
   }
 

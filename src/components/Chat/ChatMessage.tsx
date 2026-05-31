@@ -1,4 +1,3 @@
-// src/components/Chat/ChatMessage.tsx
 import React from 'react';
 
 interface ChatMessageProps {
@@ -31,7 +30,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   };
 
-  // Системные сообщения
   if (message.userId === 'system') {
     return (
       <div className="chat-system-message animate-fade-in">

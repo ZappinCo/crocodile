@@ -1,4 +1,3 @@
-// src/services/websocket.service.ts
 import { EventEmitter } from './event-emitter.service';
 
 export type WebSocketEventType =
@@ -7,7 +6,6 @@ export type WebSocketEventType =
   | 'error'
   | 'message'
   | 'reconnecting'
-  // Комнаты
   | 'delete_room'
   | 'create_room'
   | 'update_room'
@@ -19,13 +17,11 @@ export type WebSocketEventType =
   | 'game_started'
   | 'game_ended'
   | 'word_changed'
-  // Чат
   | 'new_message'
   | 'message_history'
   | 'message_deleted'
   | 'message_updated'
   | 'typing'
-  // Другие
   | 'ping'
   | 'pong'
   | 'notification';
@@ -70,23 +66,19 @@ class WebSocketService extends EventEmitter {
 
   connect(): void {
     if (this.ws?.readyState === WebSocket.OPEN) {
-      console.log('WebSocket already connected');
       return;
     }
 
     if (this.ws?.readyState === WebSocket.CONNECTING) {
-      console.log('WebSocket already connecting');
       return;
     }
 
     this.manualClose = false;
-    console.log('Connecting to WebSocket:', this.config.url);
 
     try {
       this.ws = new WebSocket(this.config.url);
       this.setupEventListeners();
     } catch (error) {
-      console.error('WebSocket creation error:', error);
       this.handleReconnect();
     }
   }
@@ -101,7 +93,6 @@ class WebSocketService extends EventEmitter {
   }
 
   private handleOpen(): void {
-    console.log('WebSocket connected');
     this.isConnected = true;
     this.reconnectAttempts = 0;
     this.startHeartbeat();
@@ -110,7 +101,6 @@ class WebSocketService extends EventEmitter {
   }
 
   private handleClose(event: CloseEvent): void {
-    console.log('WebSocket disconnected', event.code, event.reason);
     this.isConnected = false;
     this.stopHeartbeat();
     this.emit('disconnect', {
@@ -125,20 +115,16 @@ class WebSocketService extends EventEmitter {
   }
 
   private handleError(error: Event): void {
-    console.error('WebSocket error:', error);
     this.emit('error', { error: new Error('WebSocket connection error') });
   }
 
   private handleMessage(event: MessageEvent): void {
-    console.log('📨 Received message:', event.data)
     try {
       const message = JSON.parse(event.data) as WebSocketMessage;
-      console.log('📨 Received message:', message.type, message.payload);
 
       this.emit('message', message);
       this.emit(message.type, message.payload);
     } catch (error) {
-      console.error('Failed to parse WebSocket message:', error, event.data);
       this.emit('error', { error: new Error('Failed to parse message') });
     }
   }
@@ -152,9 +138,7 @@ class WebSocketService extends EventEmitter {
 
     if (this.isConnected && this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message));
-      console.log('📤 Sent message:', type, payload);
     } else {
-      console.warn(`WebSocket not connected, queueing message: ${type}`);
       this.pendingMessages.push({ type, payload });
 
       if (!this.isConnected && !this.manualClose && this.ws?.readyState !== WebSocket.CONNECTING) {
@@ -181,7 +165,6 @@ class WebSocketService extends EventEmitter {
 
     const maxAttempts = this.config.maxReconnectAttempts || 5;
     if (this.reconnectAttempts >= maxAttempts) {
-      console.error('Max reconnection attempts reached');
       this.emit('error', { error: new Error('Max reconnection attempts reached') });
       return;
     }
@@ -192,7 +175,6 @@ class WebSocketService extends EventEmitter {
       30000
     );
 
-    console.log(`Reconnecting attempt ${this.reconnectAttempts}/${maxAttempts} in ${delay}ms...`);
     this.emit('reconnecting', { attempt: this.reconnectAttempts, maxAttempts, delay });
 
     if (this.reconnectTimer) {
@@ -237,11 +219,7 @@ class WebSocketService extends EventEmitter {
       lastPong = Date.now();
       this.emit('pong', data);
     };
-
-    // this.on('pong', handlePong);
     this.heartbeatTimer = window.setInterval(checkHeartbeat, interval);
-
-    // (this.heartbeatTimer as any).pongHandler = handlePong;
   }
 
   private stopHeartbeat(): void {
@@ -255,7 +233,6 @@ class WebSocketService extends EventEmitter {
   }
 
   disconnect(): void {
-    console.log('Manually disconnecting WebSocket');
     this.manualClose = true;
     this.stopHeartbeat();
     this.pendingMessages = [];
@@ -292,9 +269,8 @@ class WebSocketService extends EventEmitter {
   }
 }
 
-// Конфигурация WebSocket
 const wsConfig: WebSocketConfig = {
-  url: import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws',
+  url: import.meta.env.VITE_WS_URL,
   reconnectInterval: 3000,
   maxReconnectAttempts: 10,
   heartbeatInterval: 30000,

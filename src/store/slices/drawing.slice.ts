@@ -1,4 +1,3 @@
-// src/store/slices/drawing.slice.ts
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 
@@ -16,7 +15,7 @@ export interface Brush {
 
 export interface Stroke {
   id: number;
-  relative: Point[];
+  points: Point[];
   brush: Brush;
 }
 
@@ -37,7 +36,7 @@ export interface DrawingState {
 }
 
 export interface AddStrokePayload {
-  relative: Point[];
+  points: Point[];
   brush?: Partial<Brush> & { eraser?: boolean };
 }
 
@@ -73,23 +72,20 @@ const drawingSlice = createSlice({
       if (state.eraserMode) {
         state.eraserMode = false;
       }
-      console.log('🎨 Brush color changed to:', action.payload);
     },
 
     setBrushSize: (state, action: PayloadAction<number>) => {
       state.brush.size = Math.max(0.01, Math.min(1, action.payload));
-      console.log('📏 Brush size changed to:', state.brush.size);
     },
 
     setEraserMode: (state, action: PayloadAction<boolean>) => {
       state.eraserMode = action.payload;
-      console.log('🧽 Eraser mode:', action.payload ? 'ON' : 'OFF');
     },
 
     addStroke: (state, action: PayloadAction<AddStrokePayload>) => {
       const stroke: Stroke = {
         id: Date.now() + Math.random(),
-        relative: action.payload.relative || [],
+        points: action.payload.points || [],
         brush: {
           color: action.payload.brush?.color ?? state.brush.color,
           size: action.payload.brush?.size ?? state.brush.size,
@@ -100,20 +96,16 @@ const drawingSlice = createSlice({
         }
       };
 
-      // Сохраняем текущее состояние в историю
       state.history.past.push(JSON.stringify(state.strokes));
       state.history.future = [];
 
-      // Добавляем новый штрих
       state.strokes.push(stroke);
-      console.log('✏️ Stroke added, total strokes:', state.strokes.length);
     },
 
     clearCanvas: (state) => {
       state.history.past.push(JSON.stringify(state.strokes));
       state.strokes = [];
       state.history.future = [];
-      console.log('🗑️ Canvas cleared');
     },
 
     undoStroke: (state) => {
@@ -123,7 +115,6 @@ const drawingSlice = createSlice({
       const previousStrokes = state.history.past.pop();
       if (previousStrokes) {
         state.strokes = JSON.parse(previousStrokes);
-        console.log('↩️ Undo performed');
       }
     },
 
@@ -134,19 +125,16 @@ const drawingSlice = createSlice({
       const nextStrokes = state.history.future.pop();
       if (nextStrokes) {
         state.strokes = JSON.parse(nextStrokes);
-        console.log('↪️ Redo performed');
       }
     },
 
     updateCanvasSize: (state, action: PayloadAction<UpdateCanvasSizePayload>) => {
       state.canvasSize = action.payload;
-      console.log('📐 Canvas size updated:', action.payload);
     },
 
     loadStrokes: (state, action: PayloadAction<Stroke[]>) => {
       state.strokes = action.payload;
       state.history = { past: [], future: [] };
-      console.log('📂 Loaded', action.payload.length, 'strokes');
     },
 
     resetDrawingState: () => initialState,
@@ -166,7 +154,6 @@ export const {
   resetDrawingState
 } = drawingSlice.actions;
 
-// Селекторы
 export const selectBrush = (state: { drawing: DrawingState }) => state.drawing.brush;
 export const selectBrushColor = (state: { drawing: DrawingState }) => state.drawing.brush.color;
 export const selectBrushSize = (state: { drawing: DrawingState }) => state.drawing.brush.size;

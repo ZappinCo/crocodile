@@ -1,4 +1,3 @@
-// src/components/RoomDetail.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useAppDispatch, useAppSelector } from '../store';
@@ -20,7 +19,6 @@ export const RoomDetail: React.FC = () => {
   const [isJoining, setIsJoining] = useState(false);
 
   useEffect(() => {
-    console.log("roomId", room)
     if (roomId && roomId != room?.id && isConnected) {
       dispatch(userJoined({
         ...user,

@@ -1,7 +1,6 @@
-// src/components/DrawingCanvas/DrawingCanvas.tsx
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useAppSelector, useAppDispatch } from '../../store';
-import { addStroke, clearCanvas } from '../../store/slices/drawing.slice';
+import { addStroke, clearCanvas, selectStrokes } from '../../store/slices/drawing.slice';
 import { selectBrush, selectEraserMode } from '../../store/slices/drawing.slice';
 import { selectCurrentRoom } from '../../store/slices/rooms.slice';
 import { selectUser } from '../../store/slices/user.slice';
@@ -18,16 +17,73 @@ export const DrawingCanvas: React.FC = () => {
   const eraserMode = useAppSelector(selectEraserMode);
   const dispatch = useAppDispatch();
 
+  const strokes = useAppSelector(selectStrokes);
+
   const room = useAppSelector(selectCurrentRoom);
   const user = useAppSelector(selectUser);
   const [isLeader, setIsLeader] = useState(false);
 
-
   useEffect(() => {
     setIsLeader(room?.leader_id === user.id);
-  }, [room?.leader_id, user.id])
+  }, [room?.leader_id, user.id]);
 
-  // Инициализация canvas
+  const absoluteToRelative = useCallback((absoluteX: number, absoluteY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    return {
+      x: absoluteX / canvas.width,
+      y: absoluteY / canvas.height
+    };
+  }, []);
+
+  const relativeToAbsolute = useCallback((relativeX: number, relativeY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    return {
+      x: relativeX * canvas.width,
+      y: relativeY * canvas.height
+    };
+  }, []);
+
+  const drawStrokes = useCallback(() => {
+    const canvas = canvasRef.current;
+    const ctx = contextRef.current;
+
+    if (!canvas || !ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#f0f0f0';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (strokes.length === 0) return;
+
+    strokes.forEach(stroke => {
+      if (!stroke.points || stroke.points.length === 0) return;
+      const firstPoint = relativeToAbsolute(stroke.points[0].x, stroke.points[0].y);
+      
+      ctx.beginPath();
+      ctx.moveTo(firstPoint.x, firstPoint.y);
+
+      for (let i = 1; i < stroke.points.length; i++) {
+        const point = relativeToAbsolute(stroke.points[i].x, stroke.points[i].y);
+        ctx.lineTo(point.x, point.y);
+      }
+
+      ctx.strokeStyle = stroke.brush?.eraser ? '#f0f0f0' : (stroke.brush?.color || '#000000');
+      ctx.lineWidth = Math.max(2, (stroke.brush?.size || 0.02) * 80);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+    });
+  }, [strokes, relativeToAbsolute]);
+
+  useEffect(() => {
+    if (canvasRef.current && contextRef.current) {
+      drawStrokes();
+    }
+  }, [strokes, drawStrokes]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -50,13 +106,15 @@ export const DrawingCanvas: React.FC = () => {
         ctx.fillRect(0, 0, width, height);
         contextRef.current = ctx;
       }
+      
+      drawStrokes();
     };
 
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
     return () => window.removeEventListener('resize', resizeCanvas);
-  }, []);
+  }, [drawStrokes]);
 
   const getCanvasCoordinates = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     const canvas = canvasRef.current;
@@ -83,7 +141,9 @@ export const DrawingCanvas: React.FC = () => {
   }, []);
 
   const startDrawing = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (!isLeader) return;
     e.preventDefault();
+    
     const { x, y } = getCanvasCoordinates(e);
     setIsDrawing(true);
     setCurrentStroke({ points: [{ x, y }] });
@@ -92,16 +152,16 @@ export const DrawingCanvas: React.FC = () => {
     if (ctx) {
       ctx.beginPath();
       ctx.moveTo(x, y);
-      ctx.lineWidth = brush.size * 50;
+      ctx.lineWidth = Math.max(2, brush.size * 80);
       ctx.strokeStyle = eraserMode ? '#f0f0f0' : brush.color;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
     }
-  }, [getCanvasCoordinates, brush, eraserMode]);
+  }, [getCanvasCoordinates, brush, eraserMode, isLeader]);
 
   const draw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (!isLeader || !isDrawing) return;
     e.preventDefault();
-    if (!isDrawing) return;
 
     const { x, y } = getCanvasCoordinates(e);
     const ctx = contextRef.current;
@@ -116,38 +176,36 @@ export const DrawingCanvas: React.FC = () => {
         points: [...prev.points, { x, y }]
       }));
     }
-  }, [isDrawing, getCanvasCoordinates]);
+  }, [isLeader, isDrawing, getCanvasCoordinates]);
 
   const stopDrawing = useCallback(() => {
-    if (!isDrawing) return;
+    if (!isLeader || !isDrawing) return;
 
     if (currentStroke.points.length > 1) {
-      dispatch(addStroke({
-        relative: currentStroke.points,
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      
+      const relativePoints = currentStroke.points.map(point => ({
+        x: point.x / canvas.width,
+        y: point.y / canvas.height
+      }));
+      
+      const newStroke = {
+        points: relativePoints,
         brush: {
           color: eraserMode ? '#f0f0f0' : brush.color,
           size: brush.size,
           brushType: 'round',
           eraser: eraserMode
         }
-      }));
+      };
+      
+      dispatch(addStroke(newStroke));
     }
 
     setIsDrawing(false);
     setCurrentStroke({ points: [] });
-  }, [isDrawing, currentStroke, eraserMode, brush, dispatch]);
-
-  const handleClearCanvas = () => {
-    if (window.confirm('Очистить весь рисунок?')) {
-      const ctx = contextRef.current;
-      const canvas = canvasRef.current;
-      if (ctx && canvas) {
-        ctx.fillStyle = '#f0f0f0';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        dispatch(clearCanvas());
-      }
-    }
-  };
+  }, [isLeader, isDrawing, currentStroke, eraserMode, brush, dispatch]);
 
   const drawingProps = isLeader ? {
     onMouseDown: startDrawing,
@@ -166,12 +224,19 @@ export const DrawingCanvas: React.FC = () => {
         ref={canvasRef}
         className="drawing-canvas"
         style={{
-          cursor: isDrawing ? 'grabbing' : 'crosshair',
-          touchAction: 'none'
+          cursor: isLeader ? (isDrawing ? 'grabbing' : 'crosshair') : 'not-allowed',
+          touchAction: 'none',
+          opacity: isLeader ? 1 : 0.8,
         }}
         {...drawingProps}
       />
       {isLeader && <Pallete />}
+      
+      {!isLeader && (
+        <div className="drawing-overlay">
+          <p>🎨 Только ведущий может рисовать</p>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,3 @@
-// src/components/Header/UserMenu.tsx
 import React, { useEffect, useRef } from 'react';
 
 interface UserMenuProps {

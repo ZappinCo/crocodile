@@ -1,4 +1,3 @@
-// src/hooks/useAutoScroll.ts
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { RefObject } from 'react';
 
