@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAppDispatch, useAppSelector } from '../../store';
-import { selectUsername, clearUsername, selectUserId } from '../../store/slices/user.slice';
+import { selectUsername, clearUsername } from '../../store/slices/user.slice';
 import { UserModal } from '../UserModal/UserModal';
 import { UserMenu } from './UserMenu';
 import logo from '../../assets/logo.svg';
@@ -12,7 +12,6 @@ export const Header: React.FC = () => {
   const dispatch = useAppDispatch();
   
   const username = useAppSelector(selectUsername);
-  const userid = useAppSelector(selectUserId);
   const isConnected = useAppSelector(state => state.websocket.isConnected);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,7 +41,6 @@ export const Header: React.FC = () => {
     <>
       <header className="app-header">
         <div className="header-container">
-          {/* Логотип */}
           <div className="header-logo" onClick={() => navigate('/')}>
             <img src={logo} className="logo-icon" alt="Crocodile Logo" />
             <div className="logo-text">
@@ -53,13 +51,19 @@ export const Header: React.FC = () => {
 
 
           <div className="header-right">
-            {/* Статус подключения */}
             <div className="connection-status" title={isConnected ? 'Подключено' : 'Отключено'}>
               <div className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`} />
               <span className="status-text">{isConnected ? 'Online' : 'Offline'}</span>
             </div>
 
-            {/* Пользователь */}
+            <button 
+              className={`nav-btn ${location.pathname === '/about' ? 'active' : ''}`}
+              onClick={() => navigate('/about')}
+            >
+              <span className="nav-icon">ℹ️</span>
+              <span className="nav-text">О проекте</span>
+            </button>
+
             <div className="user-section">
               <div className="user-info" onClick={() => setIsMenuOpen(!isMenuOpen)}>
                 <div className="user-avatar" style={{ background: `linear-gradient(135deg, #667eea 0%, #764ba2 100%)` }}>
@@ -67,7 +71,6 @@ export const Header: React.FC = () => {
                 </div>
                 <div className="user-details">
                   <div className="user-name">{username || 'Гость'}</div>
-                  <div className="user-name">{userid}</div>
                 </div>
                 <div className="user-arrow">{isMenuOpen ? '▲' : '▼'}</div>
               </div>

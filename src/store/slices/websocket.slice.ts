@@ -5,14 +5,12 @@ interface WebSocketState {
   isConnected: boolean;
   error: string | null;
   reconnectAttempts: number;
-  lastPong: number | null;
 }
 
 const initialState: WebSocketState = {
   isConnected: false,
   error: null,
   reconnectAttempts: 0,
-  lastPong: null,
 };
 
 const websocketSlice = createSlice({
@@ -24,35 +22,31 @@ const websocketSlice = createSlice({
       state.error = null;
       state.reconnectAttempts = 0;
     },
-    
+
     disconnected: (state, action: PayloadAction<{ connected: boolean; code?: number; reason?: string }>) => {
       state.isConnected = action.payload.connected;
     },
-    
+
     websocketError: (state, action: PayloadAction<string>) => {
       state.error = action.payload;
       state.isConnected = false;
     },
-    
+
     reconnecting: (state, action: PayloadAction<{ attempt: number }>) => {
       state.reconnectAttempts = action.payload.attempt;
     },
-    
-    pong: (state, action: PayloadAction<{ timestamp: number }>) => {
-      state.lastPong = action.payload.timestamp;
-    },
-    
+
+
     resetWebSocket: () => initialState,
   },
 });
 
-export const { 
-  connected, 
-  disconnected, 
-  websocketError, 
-  reconnecting, 
-  pong, 
-  resetWebSocket 
+export const {
+  connected,
+  disconnected,
+  websocketError,
+  reconnecting,
+  resetWebSocket
 } = websocketSlice.actions;
 
 export default websocketSlice.reducer;

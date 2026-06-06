@@ -14,6 +14,7 @@ export interface Room {
   current_word: string | null;
   game_active: boolean;
   users?: string[];
+  words_pool?: string[];
 }
 
 export interface UserMovePayload {
@@ -28,7 +29,8 @@ export interface RoomCreatePayload {
   description: string | null;
   capacity: number;
   creator_id: string;
-  creator_name: string;
+  creator_name:string;
+  words?: string[];
 }
 
 interface RoomsState {
@@ -59,6 +61,7 @@ const roomsSlice = createSlice({
     },
 
     userLeft: (state, action: PayloadAction<UserMovePayload>) => {
+      console.log("user left ",action.payload.user_id)
       state.selectedRoomId = null;
     },
 
@@ -75,25 +78,6 @@ const roomsSlice = createSlice({
         state.rooms[index] = action.payload;
       }
     },
-
-    editRoom: (state, action: PayloadAction<RoomCreatePayload>) => {
-    },
-
-    createRoom: (state, action: PayloadAction<RoomCreatePayload>) => {
-    },
-
-    clearError: (state) => {
-      state.error = null;
-    },
-
-    setLoading: (state, action: PayloadAction<boolean>) => {
-      state.isLoading = action.payload;
-    },
-
-    setError: (state, action: PayloadAction<string>) => {
-      state.error = action.payload;
-      state.isLoading = false;
-    },
   },
 });
 
@@ -102,13 +86,20 @@ export const {
   userJoined,
   userLeft,
   deleteRoom,
-  createRoom,
   updateRoom,
-  editRoom,
-  clearError,
-  setLoading,
-  setError,
 } = roomsSlice.actions;
+
+export const createRoom = (payload:RoomCreatePayload) => ({
+  type: 'rooms/createRoom',
+  payload: payload,
+  meta: { webSocket: true, event: 'create_room' }
+});
+
+export const editRoom = (payload:RoomCreatePayload) => ({
+  type: 'rooms/editRoom',
+  payload: payload,
+  meta: { webSocket: true, event: 'edit_room' }
+});
 
 export const selectAllRooms = (state: { rooms: RoomsState }) => state.rooms.rooms;
 export const selectCurrentRoom = (state: { rooms: RoomsState }) => {

@@ -7,6 +7,7 @@ import { MainLayout } from './layouts/MainLayout';
 import { RoomsList } from './components/RoomsList/RoomsList';
 import { RoomDetail } from './components/RoomDetail';
 import { UserModal } from './components/UserModal/UserModal';
+import { About } from './components/About/About';
 
 function App() {
   useEffect(() => {
@@ -35,6 +36,7 @@ function App() {
       <Routes>
         <Route element={<MainLayout />}>
           <Route path="/" element={<RoomsList />} />
+          <Route path="/about" element={<About />} />
           <Route path="/room/:roomId" element={<RoomDetail />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

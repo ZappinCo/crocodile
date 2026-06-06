@@ -1,5 +1,3 @@
-/* src/styles/components/user-modal.css */
-
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -66,9 +64,8 @@
 .modal-body {
   padding: var(--spacing-6);
 }
-
 .input-group {
-  margin-bottom: var(--spacing-6);
+  margin-bottom: var(--spacing-5);
 }
 
 .input-group label {
@@ -79,7 +76,9 @@
   font-size: var(--font-size-sm);
 }
 
-.input-group input {
+.input-group input,
+.input-group select,
+.input-group textarea {
   width: 100%;
   padding: var(--spacing-3) var(--spacing-4);
   border: 2px solid var(--border-color);
@@ -91,15 +90,22 @@
   font-family: inherit;
 }
 
-.input-group input:focus {
+.input-group input:focus,
+.input-group select:focus,
+.input-group textarea:focus {
   outline: none;
   border-color: var(--border-color-focus);
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
 
 .input-group input.error {
   border-color: var(--color-error);
   animation: shake 0.3s ease-in-out;
+}
+
+.input-group textarea {
+  resize: vertical;
+  min-height: 80px;
 }
 
 .error-message {
@@ -178,7 +184,6 @@
   transform: translateY(0);
 }
 
-/* Адаптивность */
 @media (max-width: 480px) {
   .modal-content {
     width: 95%;

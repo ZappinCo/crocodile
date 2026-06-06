@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store';
-import { webSocketService } from '../../services/websocket.service';
 import { selectUserForWebSocket } from '../../store/slices/user.slice';
-import { createRoom } from '../../store/slices/rooms.slice'
+import { createRoom } from '../../store/slices/rooms.slice';
 
 interface CreateRoomModalProps {
   isOpen: boolean;
@@ -14,8 +13,11 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({ isOpen, onClos
   const [roomName, setRoomName] = useState('');
   const [description, setDescription] = useState('');
   const [capacity, setCapacity] = useState(6);
+  const [words, setWords] = useState<string[]>([]);
+  const [newWord, setNewWord] = useState('');
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const wordsInputRef = useRef<HTMLInputElement>(null);
   const userForWS = useAppSelector(selectUserForWebSocket);
 
   useEffect(() => {
@@ -23,12 +25,38 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({ isOpen, onClos
       setRoomName('');
       setDescription('');
       setCapacity(6);
+      setWords([]);
+      setNewWord('');
       setError('');
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
     }
   }, [isOpen]);
+
+  const handleAddWord = () => {
+    const word = newWord.trim().toLowerCase();
+    if (!word) return;
+    if (words.includes(word)) {
+      alert('Такое слово уже есть');
+      return;
+    }
+    if (word.length < 2) {
+      alert('Слово должно содержать минимум 2 символа');
+      return;
+    }
+    if (word.length > 20) {
+      alert('Слово не может быть длиннее 20 символов');
+      return;
+    }
+    setWords([...words, word]);
+    setNewWord('');
+    wordsInputRef.current?.focus();
+  };
+
+  const handleRemoveWord = (wordToRemove: string) => {
+    setWords(words.filter(w => w !== wordToRemove));
+  };
 
   const handleSubmit = () => {
     const trimmedName = roomName.trim();
@@ -53,6 +81,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({ isOpen, onClos
       name: trimmedName,
       description: description.trim() || null,
       capacity,
+      words: words.length > 0 ? words : undefined,
       creator_id: userForWS.user_id,
       creator_name: userForWS.user_name
     }));
@@ -65,6 +94,13 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({ isOpen, onClos
       handleSubmit();
     } else if (e.key === 'Escape') {
       onClose();
+    }
+  };
+
+  const handleWordKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddWord();
     }
   };
 
@@ -112,7 +148,8 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({ isOpen, onClos
 
           <div className="input-group">
             <label htmlFor="capacity">Максимум игроков</label>
-            <select
+            <select 
+              className="edit-field"
               id="capacity"
               value={capacity}
               onChange={(e) => setCapacity(Number(e.target.value))}
@@ -124,6 +161,44 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({ isOpen, onClos
             </select>
           </div>
 
+          <div className="input-group">
+            <label>Слова для угадывания (необязательно)</label>
+            <div className="words-list">
+              {words.length === 0 ? (
+                <div className="words-empty">Список слов пуст. Будут использованы стандартные слова.</div>
+              ) : (
+                words.map((word, idx) => (
+                  <span key={idx} className="word-tag">
+                    {word}
+                    <button 
+                      type="button" 
+                      className="remove-word-btn"
+                      onClick={() => handleRemoveWord(word)}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))
+              )}
+            </div>
+            <div className="add-word-form">
+              <input
+                ref={wordsInputRef}
+                type="text"
+                value={newWord}
+                onChange={(e) => setNewWord(e.target.value)}
+                onKeyDown={handleWordKeyDown}
+                placeholder="Введите слово и нажмите Enter..."
+                maxLength={20}
+              />
+              <button type="button" onClick={handleAddWord} className="add-word-btn">
+                ➕ Добавить
+              </button>
+            </div>
+            <small className="words-hint">
+              💡 Если не добавить слова, будут использоваться стандартные. Ведущий будет загадывать слова случайным образом.
+            </small>
+          </div>
         </div>
 
         <div className="modal-footer">

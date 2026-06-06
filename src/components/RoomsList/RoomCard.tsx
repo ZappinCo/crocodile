@@ -2,27 +2,28 @@ import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { selectUsername, selectUserId } from '../../store/slices/user.slice';
 import type { Room } from '../../store/slices/rooms.slice';
-import { deleteRoom, updateRoom } from '../../store/slices/rooms.slice';
+import { deleteRoom, editRoom } from '../../store/slices/rooms.slice';
 import { useNavigate } from 'react-router';
-
 
 export const RoomCard = ({ room }: { room: Room }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const currentUsername = useAppSelector(selectUsername);
   const currentUserId = useAppSelector(selectUserId);
+  const currentUserName = useAppSelector(selectUsername);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(room.name);
   const [editDescription, setEditDescription] = useState(room.description || '');
   const [editCapacity, setEditCapacity] = useState(room.capacity);
+  const [editWords, setEditWords] = useState<string[]>(room.words_pool || []);
+  const [newWord, setNewWord] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
   const freeSpaces = room.capacity - room.current_users;
   const isFull = freeSpaces === 0;
   const occupancyPercent = (room.current_users / room.capacity) * 100;
-  const isCreator = room.owner_id == currentUserId;
-  const canEdit = isCreator && !room.game_active;
+  const isCreator = room.owner_id === currentUserId;
+  const canEdit = isCreator;
 
   const formatDate = (dateString: string) => {
     try {
@@ -37,7 +38,6 @@ export const RoomCard = ({ room }: { room: Room }) => {
       return 'Недавно';
     }
   };
-
 
   const handleRoomClick = () => {
     if (room && room.current_users < room.capacity) {
@@ -56,13 +56,14 @@ export const RoomCard = ({ room }: { room: Room }) => {
       return;
     }
 
-    dispatch(updateRoom({
+    dispatch(editRoom({
       room_id: room.id,
+      creator_id: currentUserId,
+      creator_name: currentUserName,
       name: editName.trim(),
       description: editDescription.trim(),
       capacity: editCapacity,
-      creator_id: currentUserId,
-      creator_name: currentUsername
+      words: editWords
     }));
 
     setIsEditing(false);
@@ -72,7 +73,24 @@ export const RoomCard = ({ room }: { room: Room }) => {
     setEditName(room.name);
     setEditDescription(room.description || '');
     setEditCapacity(room.capacity);
+    setEditWords(room.words_pool || []);
+    setNewWord('');
     setIsEditing(false);
+  };
+
+  const handleAddWord = () => {
+    const word = newWord.trim().toLowerCase();
+    if (!word) return;
+    if (editWords.includes(word)) {
+      alert('Такое слово уже есть');
+      return;
+    }
+    setEditWords([...editWords, word]);
+    setNewWord('');
+  };
+
+  const handleRemoveWord = (wordToRemove: string) => {
+    setEditWords(editWords.filter(w => w !== wordToRemove));
   };
 
   const handleDelete = () => {
@@ -81,7 +99,7 @@ export const RoomCard = ({ room }: { room: Room }) => {
   };
 
   const confirmDelete = () => {
-    dispatch(deleteRoom(room.id))
+    dispatch(deleteRoom(room.id));
   };
 
   const cancelDelete = () => {
@@ -126,6 +144,38 @@ export const RoomCard = ({ room }: { room: Room }) => {
             </select>
           </div>
 
+          <div className="edit-field">
+            <label>Список слов для угадывания:</label>
+            <div className="words-list">
+              {editWords.map((word, idx) => (
+                <span key={idx} className="word-tag">
+                  {word}
+                  <button 
+                    type="button" 
+                    className="remove-word-btn"
+                    onClick={() => handleRemoveWord(word)}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="add-word-form">
+              <input
+                type="text"
+                value={newWord}
+                onChange={(e) => setNewWord(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAddWord()}
+                placeholder="Новое слово..."
+                maxLength={30}
+              />
+              <button type="button" onClick={handleAddWord} className="add-word-btn">
+                ➕ Добавить
+              </button>
+            </div>
+            <small className="words-hint">Слова будут использоваться для игры. Ведущий будет загадывать их случайным образом.</small>
+          </div>
+
           <div className="edit-actions">
             <button className="edit-save-btn" onClick={handleSaveEdit}>
               💾 Сохранить
@@ -159,11 +209,10 @@ export const RoomCard = ({ room }: { room: Room }) => {
 
   return (
     <div
-      className={`room-card ${isFull ? 'full' : ''}  animate-fade-in-up`}
+      className={`room-card ${isFull ? 'full' : ''} animate-fade-in-up`}
       onClick={!isFull ? handleRoomClick : undefined}
       style={{ cursor: !isFull ? 'pointer' : 'not-allowed' }}
     >
-      {/* Кнопки управления (только для пользовательских комнат) */}
       {canEdit && (
         <div className="room-actions" onClick={(e) => e.stopPropagation()}>
           <button
@@ -213,8 +262,14 @@ export const RoomCard = ({ room }: { room: Room }) => {
             style={{ width: `${occupancyPercent}%` }}
           />
         </div>
-
       </div>
+
+      {room.words_pool && room.words_pool.length > 0 && (
+        <div className="room-words-preview">
+          <span className="words-label">📚 Слова:</span>
+          <span className="words-count">{room.words_pool.length} слов</span>
+        </div>
+      )}
 
       {room.created_at && (
         <div className="room-created">

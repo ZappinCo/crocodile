@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
-import { useAppDispatch, useAppSelector } from '../../store';
+import React, { useState, } from 'react';
+import { useAppSelector } from '../../store';
 import { selectAllRooms } from '../../store/slices/rooms.slice';
-import webSocketService from '../../services/websocket.service';
 import { RoomCard } from './RoomCard';
 import { CreateRoomModal } from './CreateRoomModal';
 import '../../styles/components/rooms-list.css';

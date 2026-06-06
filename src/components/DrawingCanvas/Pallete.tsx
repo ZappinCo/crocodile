@@ -26,11 +26,9 @@ const items: PalleteItemData[] = [
   { type: "size", size: 0.1 },
   { type: "size", size: 0.2 },
   { type: "size", size: 0.3 },
-  { type: "size", size: 0.4 },
+  { type: "size", size: 0.7 },
 
   { type: "clear" },
-  { type: "undo" },
-  { type: "redo" },
 ];
 
 export const Pallete: React.FC = () => {

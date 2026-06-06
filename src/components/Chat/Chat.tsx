@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { sendMessage, requestHistory, setActiveRoom, setLoading, selectIsLoading, selectMessages } from '../../store/slices/chat.slice';
 import { selectUser } from '../../store/slices/user.slice';
@@ -11,7 +11,7 @@ export const Chat = () => {
   const dispatch = useAppDispatch();
   const room = useAppSelector(selectCurrentRoom);
   const user = useAppSelector(selectUser);
-  const [isLeader, setIsLeader] = useState(false);
+  const isLeader = useMemo(() => room?.leader_id === user.id, [room?.leader_id, user.id]);
 
   const isConnected = useAppSelector(state => state.websocket.isConnected);
   const [input, setInput] = useState('');
@@ -20,11 +20,7 @@ export const Chat = () => {
   const isLoading = useAppSelector(selectIsLoading);
 
 
-  useEffect(() => {
-    setIsLeader(room?.leader_id === user.id);
-  }, [room?.leader_id, user.id])
-
-  const { containerRef, handleScroll, autoScroll } = useAutoScroll([messages]);
+  const { containerRef, handleScroll, } = useAutoScroll([messages]);
 
   useEffect(() => {
     if (room?.id && isConnected) {
@@ -39,6 +35,10 @@ export const Chat = () => {
       return () => clearTimeout(timeout);
     }
   }, [room?.id, isConnected, dispatch]);
+
+    useEffect(() => {
+    console.log("slice mesagges",messages)
+  }, [messages])
 
   const handleSendMessage = () => {
     const text = input.trim();
@@ -102,7 +102,7 @@ export const Chat = () => {
     <div className="chat-container">
       <div className="chat-header">
         <div className="chat-header-info">
-          <span className="chat-header-title">{room.name}{room?.leader_id}</span>
+          <span className="chat-header-title">{room.name}</span>
         </div>
         <div className="chat-header-stats">
           <span className="stat-item">
@@ -182,7 +182,6 @@ export const Chat = () => {
 
 function groupMessagesByDate(messages: any[]) {
   const groups: Record<string, any[]> = {};
-
   messages.forEach(message => {
     const date = formatDate(message.timestamp);
     if (!groups[date]) {
@@ -190,7 +189,6 @@ function groupMessagesByDate(messages: any[]) {
     }
     groups[date].push(message);
   });
-
   return Object.entries(groups);
 }
 

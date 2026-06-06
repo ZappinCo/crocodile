@@ -1,4 +1,3 @@
-/* src/styles/components/chat.css */
 
 .chat-container {
   display: flex;
@@ -11,7 +10,6 @@
   flex: 1;
 }
 
-/* Header */
 .chat-header {
   display: flex;
   justify-content: space-between;
@@ -72,7 +70,6 @@
   font-weight: var(--font-weight-medium);
 }
 
-/* Текущее слово */
 .current-word-display {
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
   padding: var(--spacing-3) var(--spacing-4);
@@ -104,7 +101,6 @@
   margin-top: var(--spacing-1);
 }
 
-/* Сообщения */
 .chat-messages {
   flex: 1;
   overflow-y: auto;
@@ -222,7 +218,6 @@
   border-radius: var(--border-radius-full);
 }
 
-/* Системные сообщения */
 .chat-system-message {
   display: flex;
   justify-content: center;
@@ -240,7 +235,6 @@
   gap: var(--spacing-2);
 }
 
-/* Печатание */
 .chat-typing {
   display: flex;
   align-items: center;
@@ -272,7 +266,6 @@
   margin-left: var(--spacing-2);
 }
 
-/* Пустое состояние */
 .chat-empty {
   display: flex;
   flex-direction: column;
@@ -298,7 +291,6 @@
   font-size: var(--font-size-sm);
 }
 
-/* Состояния загрузки/ошибки */
 .chat-loading,
 .chat-offline,
 .chat-error {
@@ -319,7 +311,6 @@
   animation: spin 1s linear infinite;
 }
 
-/* Ввод сообщений */
 .chat-input-container {
   padding: var(--spacing-4);
   background: var(--bg-primary);
@@ -378,7 +369,6 @@
   transform: none;
 }
 
-/* Игровые подсказки */
 .game-hint {
   font-size: var(--font-size-xs);
   padding: var(--spacing-2) var(--spacing-3);

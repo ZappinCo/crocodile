@@ -14,17 +14,10 @@ export type WebSocketEventType =
   | 'edit_room'
   | 'user_joined'
   | 'user_left'
-  | 'game_started'
-  | 'game_ended'
-  | 'word_changed'
+  | 'add_stroke'
+  | 'set_strokes'
+  | 'request_history'
   | 'new_message'
-  | 'message_history'
-  | 'message_deleted'
-  | 'message_updated'
-  | 'typing'
-  | 'ping'
-  | 'pong'
-  | 'notification';
 
 export interface WebSocketConfig {
   url: string;
@@ -48,7 +41,7 @@ class WebSocketService extends EventEmitter {
   private ws: WebSocket | null = null;
   private reconnectAttempts: number = 0;
   private reconnectTimer: number | null = null;
-  private heartbeatTimer: number | null = null;
+
   private manualClose: boolean = false;
   private isConnected: boolean = false;
   private pendingMessages: PendingMessage[] = [];
@@ -57,11 +50,6 @@ class WebSocketService extends EventEmitter {
   constructor(config: WebSocketConfig) {
     super();
     this.config = config;
-    this.setupEventForwarding();
-  }
-
-  private setupEventForwarding(): void {
-    this.setMaxListeners(20);
   }
 
   connect(): void {
@@ -79,6 +67,7 @@ class WebSocketService extends EventEmitter {
       this.ws = new WebSocket(this.config.url);
       this.setupEventListeners();
     } catch (error) {
+      console.log(error);
       this.handleReconnect();
     }
   }
@@ -95,14 +84,12 @@ class WebSocketService extends EventEmitter {
   private handleOpen(): void {
     this.isConnected = true;
     this.reconnectAttempts = 0;
-    this.startHeartbeat();
     this.emit('connect', { connected: true });
     this.flushPendingMessages();
   }
 
   private handleClose(event: CloseEvent): void {
     this.isConnected = false;
-    this.stopHeartbeat();
     this.emit('disconnect', {
       connected: false,
       code: event.code,
@@ -115,6 +102,7 @@ class WebSocketService extends EventEmitter {
   }
 
   private handleError(error: Event): void {
+    console.log(error);
     this.emit('error', { error: new Error('WebSocket connection error') });
   }
 
@@ -125,6 +113,7 @@ class WebSocketService extends EventEmitter {
       this.emit('message', message);
       this.emit(message.type, message.payload);
     } catch (error) {
+      console.log(error)
       this.emit('error', { error: new Error('Failed to parse message') });
     }
   }
@@ -186,55 +175,9 @@ class WebSocketService extends EventEmitter {
     }, delay);
   }
 
-  private startHeartbeat(): void {
-    this.stopHeartbeat();
-
-    const interval = this.config.heartbeatInterval || 30000;
-    let lastPong = Date.now();
-    let missedPongs = 0;
-
-    const checkHeartbeat = (): void => {
-      if (!this.isConnected || !this.ws || this.ws.readyState !== WebSocket.OPEN) {
-        return;
-      }
-
-      const now = Date.now();
-      if (now - lastPong > interval * 2) {
-        missedPongs++;
-        console.warn(`Heartbeat missed ${missedPongs} time(s)`);
-
-        if (missedPongs >= 3) {
-          console.error('No heartbeat response, reconnecting...');
-          this.ws?.close();
-          return;
-        }
-      } else {
-        missedPongs = 0;
-      }
-
-      this.send('ping', { timestamp: now });
-    };
-
-    const handlePong = (data: { timestamp: number }): void => {
-      lastPong = Date.now();
-      this.emit('pong', data);
-    };
-    this.heartbeatTimer = window.setInterval(checkHeartbeat, interval);
-  }
-
-  private stopHeartbeat(): void {
-    if (this.heartbeatTimer) {
-      if ((this.heartbeatTimer as any).pongHandler) {
-        this.off('pong', (this.heartbeatTimer as any).pongHandler);
-      }
-      clearInterval(this.heartbeatTimer);
-      this.heartbeatTimer = null;
-    }
-  }
 
   disconnect(): void {
     this.manualClose = true;
-    this.stopHeartbeat();
     this.pendingMessages = [];
 
     if (this.reconnectTimer) {

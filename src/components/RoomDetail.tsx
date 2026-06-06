@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useAppDispatch, useAppSelector } from '../store';
-import { selectCurrentRoom, selectRoomById, userJoined, userLeft } from '../store/slices/rooms.slice';
-import { webSocketService } from '../services/websocket.service';
+import { selectCurrentRoom, userJoined, userLeft } from '../store/slices/rooms.slice';
 import { selectUserForWebSocket } from '../store/slices/user.slice';
 import { Chat } from './Chat/Chat';
 import { DrawingCanvas } from './DrawingCanvas/DrawingCanvas';
@@ -10,13 +9,12 @@ import { DrawingCanvas } from './DrawingCanvas/DrawingCanvas';
 export const RoomDetail: React.FC = () => {
   const navigate = useNavigate();
   const { roomId } = useParams<{ roomId: string }>();
-  
+
   const room = useAppSelector(selectCurrentRoom);
   const user = useAppSelector(selectUserForWebSocket)
 
   const dispatch = useAppDispatch();
   const isConnected = useAppSelector(state => state.websocket.isConnected);
-  const [isJoining, setIsJoining] = useState(false);
 
   useEffect(() => {
     if (roomId && roomId != room?.id && isConnected) {
@@ -25,7 +23,7 @@ export const RoomDetail: React.FC = () => {
         room_id: roomId
       }))
     }
-  }, [room, isConnected])
+  }, [room, isConnected, roomId, user, dispatch])
 
   useEffect(() => {
     return () => {
@@ -35,7 +33,7 @@ export const RoomDetail: React.FC = () => {
           room_id: roomId
         }))
     };
-  }, []);
+  }, [roomId, user, dispatch]);
 
   if (!isConnected) {
     return (

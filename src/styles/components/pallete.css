@@ -1,5 +1,3 @@
-/* src/styles/components/pallete.css */
-
 .pallete-container {
   position: absolute;
   top: var(--spacing-2);
@@ -58,7 +56,6 @@
   box-shadow: none;
 }
 
-/* Индикатор активного элемента */
 .active-indicator {
   position: absolute;
   top: -2px;
@@ -77,7 +74,6 @@
   animation: pulse 1.5s ease-in-out infinite;
 }
 
-/* Цветовые элементы */
 .pallete-item--color {
   border-radius: 50%;
   transition: all var(--transition-base) var(--ease-in-out);
@@ -87,7 +83,6 @@
   transform: scale(1.15);
 }
 
-/* Элементы размера */
 .pallete-item--size {
   background: var(--bg-secondary);
   display: flex;
@@ -101,7 +96,6 @@
   background: currentColor;
 }
 
-/* Ластик */
 .pallete-item--eraser {
   background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
 }
@@ -111,7 +105,6 @@
   animation: pulse 1s ease-in-out;
 }
 
-/* Очистка */
 .pallete-item--clear {
   background: var(--color-error-light);
 }
@@ -126,7 +119,6 @@
   transform: scale(1.1);
 }
 
-/* Undo/Redo */
 .pallete-item--undo,
 .pallete-item--redo {
   background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
@@ -146,7 +138,6 @@
   transition: transform var(--transition-base) var(--ease-in-out);
 }
 
-/* Адаптивность */
 @media (max-width: 768px) {
   .pallete-container {
     position: relative;

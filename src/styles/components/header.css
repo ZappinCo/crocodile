@@ -1,5 +1,3 @@
-/* src/styles/components/header.css */
-
 .app-header {
   position: sticky;
   top: 0;
@@ -22,7 +20,6 @@
   gap: var(--spacing-5);
 }
 
-/* Логотип */
 .header-logo {
   display: flex;
   align-items: center;
@@ -60,7 +57,6 @@
   margin-top: 2px;
 }
 
-/* Навигация */
 .header-nav {
   display: flex;
   gap: var(--spacing-2);
@@ -97,7 +93,6 @@
   font-size: var(--font-size-lg);
 }
 
-/* Правая секция */
 .header-right {
   display: flex;
   align-items: center;
@@ -105,7 +100,6 @@
   flex-shrink: 0;
 }
 
-/* Статус подключения */
 .connection-status {
   display: flex;
   align-items: center;
@@ -138,7 +132,6 @@
   font-weight: var(--font-weight-medium);
 }
 
-/* Секция пользователя */
 .user-section {
   position: relative;
 }
@@ -203,7 +196,6 @@
   transform: translateY(2px);
 }
 
-/* Выпадающее меню */
 .user-menu {
   position: absolute;
   top: calc(100% + var(--spacing-2));
@@ -248,7 +240,6 @@
   width: 24px;
 }
 
-/* Адаптивность */
 @media (max-width: 768px) {
   .header-container {
     padding: var(--spacing-2) var(--spacing-4);

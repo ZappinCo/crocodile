@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import type { RefObject } from 'react';
 
 interface UseAutoScrollOptions {
   threshold?: number;
@@ -55,7 +54,7 @@ export const useAutoScroll = <T extends HTMLElement>(
     if (autoScroll) {
       scrollToBottom();
     }
-  }, dependencies);
+  }, [dependencies]);
 
   useEffect(() => {
     const container = containerRef.current;

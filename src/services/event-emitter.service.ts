@@ -2,7 +2,6 @@ type EventHandler = (...args: any[]) => void;
 
 export class EventEmitter {
   private events: Map<string, Set<EventHandler>> = new Map();
-  private maxListeners: number = 10;
 
   on(event: string, handler: EventHandler): () => void {
     if (!this.events.has(event)) {
@@ -44,17 +43,5 @@ export class EventEmitter {
     } else {
       this.events.clear();
     }
-  }
-
-  setMaxListeners(n: number): void {
-    this.maxListeners = n;
-  }
-
-  listenerCount(event: string): number {
-    return this.events.get(event)?.size || 0;
-  }
-
-  eventNames(): string[] {
-    return Array.from(this.events.keys());
   }
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store';
-import { setUsername, selectUsername, selectIsUsernameValid } from '../../store/slices/user.slice';
+import { setUsername, selectUsername } from '../../store/slices/user.slice';
 import '../../styles/components/user-modal.css';
 
 interface UserModalProps {
@@ -11,7 +11,6 @@ interface UserModalProps {
 export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose }) => {
   const dispatch = useAppDispatch();
   const currentUsername = useAppSelector(selectUsername);
-  const isValid = useAppSelector(selectIsUsernameValid);
   
   const [username, setUsernameLocal] = useState(currentUsername);
   const [error, setError] = useState('');
