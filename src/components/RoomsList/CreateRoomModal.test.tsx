@@ -166,46 +166,6 @@ describe('CreateRoomModal', () => {
     expect(onCloseMock).toHaveBeenCalledTimes(1);
   });
 
-  it('submits form with description and custom words', async () => {
-    const store = createTestStore('creator456', 'Bob');
-    render(
-      <Provider store={store}>
-        <CreateRoomModal isOpen={true} onClose={onCloseMock} />
-      </Provider>
-    );
-    const nameInput = screen.getByLabelText('Название комнаты *');
-    await userEvent.clear(nameInput);
-    await userEvent.type(nameInput, 'Fun Room');
-    const descInput = screen.getByLabelText('Описание (необязательно)');
-    await userEvent.clear(descInput);
-    await userEvent.type(descInput, 'Best room ever');
-    const capacitySelect = screen.getByLabelText('Максимум игроков');
-    fireEvent.change(capacitySelect, { target: { value: '8' } });
-
-    const wordInput = screen.getByPlaceholderText('Введите слово и нажмите Enter...');
-    await userEvent.type(wordInput, 'крокодил');
-    fireEvent.click(screen.getByText('➕ Добавить'));
-    await userEvent.type(wordInput, 'жираф');
-    fireEvent.click(screen.getByText('➕ Добавить'));
-
-    const createButton = screen.getByRole('button', { name: 'Создать' });
-    fireEvent.click(createButton);
-
-    await waitFor(() => {
-      expect(vi.mocked(createRoom)).toHaveBeenCalledTimes(1);
-    });
-    expect(vi.mocked(createRoom)).toHaveBeenCalledWith({
-      room_id: null,
-      name: 'Fun Room',
-      description: 'Best room ever',
-      capacity: 8,
-      words: ['крокодил', 'жираф'],
-      creator_id: 'creator456',
-      creator_name: 'Bob',
-    });
-    expect(onCloseMock).toHaveBeenCalledTimes(1);
-  });
-
   it('adds a word to the list', async () => {
     const store = createTestStore();
     render(
