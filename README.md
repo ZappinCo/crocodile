@@ -1,74 +1,70 @@
-# crocodile
-# React + TypeScript + Vite
+# Crocodile Game - Игра "Крокодил" онлайн
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## О проекте
 
-Currently, two official plugins are available:
+"Крокодил" - это многопользовательская онлайн-игра, где один игрок (ведущий) рисует загаданное слово, а остальные игроки пытаются его угадать. Проект представляет собой веб-приложение с поддержкой реального времени, рисованием на холсте и чатом.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Основные возможности
 
-## React Compiler
+- Многопользовательская игра до 10 человек в одной комнате
+- Холст для рисования с настройкой кисти, выбором цвета
+- Чат в реальном времени для общения и отправки ответов
+- Автоматическая смена ведущего при правильном ответе
+- Возможность создавать собственный список слов для каждой комнаты
+- Мгновенная синхронизация через WebSocket соединение
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Правила игры
 
-## Expanding the ESLint configuration
+**Для ведущего**
+Ведущий видит загаданное слово и должен нарисовать его на холсте так, чтобы другие игроки могли угадать. При этом нельзя писать буквы или цифры, можно только рисовать. Ведущий меняется, когда кто-то из игроков правильно угадывает слово.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+**Для игроков**
+Игроки наблюдают за рисунком ведущего и пишут свои предположения в чат. Тот, кто первым угадывает слово, становится новым ведущим.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Как начать играть
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1. Введите ваше имя в модальном окне
+2. Создайте новую комнату или присоединитесь к существующей
+3. При создании комнаты можно задать название, описание, максимальное количество игроков и список слов
+4. Когда все игроки собрались, начинается игра
+5. Ведущий рисует слово, остальные угадывают
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Технологии
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+**Frontend**
+- React 18 - библиотека для интерфейсов
+- TypeScript - типизация
+- Redux Toolkit - управление состоянием
+- Vite - сборка проекта
+- CSS Modules - стили
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+**Backend**
+- FastAPI - веб-фреймворк
+- WebSockets - обмен данными в реальном времени
+- Uvicorn - ASGI сервер
+- Python 3.10+
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Установка и запуск
+
+### Требования
+- Node.js 18 или выше
+- Python 3.10 или выше
+- npm или yarn
+
+### Запуск frontend части
+```bash
+# Клонирование репозитория
+git clone https://github.com/yourusername/crocodile-game.git
+cd crocodile-game
+
+# Установка зависимостей
+npm install
+
+# Создание файла с переменными окружения
+cp .env.example .env
+
+# Запуск в режиме разработки
+npm run dev
+
+# Сборка для production
+npm run build
