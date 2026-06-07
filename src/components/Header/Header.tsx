@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { selectUsername, clearUsername } from '../../store/slices/user.slice';
@@ -25,12 +25,6 @@ export const Header: React.FC = () => {
     }
   };
 
-  const isUserSet = useAppSelector(selectIsUserSet);
-  useEffect(() => {
-    if (!isUserSet)
-      handleOpenModal();
-  }, [isUserSet])
-
   const handleOpenModal = () => {
     setIsModalOpen(true);
     setIsMenuOpen(false);
@@ -43,6 +37,8 @@ export const Header: React.FC = () => {
   const getInitials = () => {
     return username ? username.charAt(0).toUpperCase() : '?';
   };
+
+  const isUserSet = useAppSelector(selectIsUserSet);
 
   return (
     <>
@@ -94,7 +90,7 @@ export const Header: React.FC = () => {
         </div>
       </header>
 
-      <UserModal isOpen={isModalOpen} onClose={handleCloseModal} />
+      <UserModal isOpen={isModalOpen || !isUserSet} onClose={handleCloseModal} />
     </>
   );
 };

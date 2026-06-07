@@ -1,12 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router';
-import { useAppSelector } from './store';
 import webSocketService from './services/websocket.service';
-import { selectIsUserSet } from './store/slices/user.slice';
 import { MainLayout } from './layouts/MainLayout';
 import { RoomsList } from './components/RoomsList/RoomsList';
 import { RoomDetail } from './components/RoomDetail';
-import { UserModal } from './components/UserModal/UserModal';
 import { About } from './components/About/About';
 
 function App() {
