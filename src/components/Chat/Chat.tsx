@@ -1,10 +1,11 @@
-import React, { useState, useEffect,useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { sendMessage, requestHistory, setActiveRoom, setLoading, selectIsLoading, selectMessages } from '../../store/slices/chat.slice';
 import { selectUser } from '../../store/slices/user.slice';
 import { selectCurrentRoom } from '../../store/slices/rooms.slice';
 import { useAutoScroll } from '../../hooks/useAutoScroll';
 import { ChatMessage } from './ChatMessage';
+import type { Message } from '../../store/slices/chat.slice';
 import '../../styles/components/chat.css';
 
 export const Chat = () => {
@@ -36,8 +37,8 @@ export const Chat = () => {
     }
   }, [room?.id, isConnected, dispatch]);
 
-    useEffect(() => {
-    console.log("slice mesagges",messages)
+  useEffect(() => {
+    console.log("slice mesagges", messages)
   }, [messages])
 
   const handleSendMessage = () => {
@@ -180,8 +181,8 @@ export const Chat = () => {
   );
 };
 
-function groupMessagesByDate(messages: any[]) {
-  const groups: Record<string, any[]> = {};
+function groupMessagesByDate(messages: Message[]) {
+  const groups: Record<string, Message[]> = {};
   messages.forEach(message => {
     const date = formatDate(message.timestamp);
     if (!groups[date]) {

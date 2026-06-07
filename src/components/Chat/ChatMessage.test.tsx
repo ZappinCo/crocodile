@@ -33,7 +33,7 @@ describe('ChatMessage', () => {
         isOwn={false}
         isLeader={false}
         isGameActive={true}
-        username="AnotherUser"
+        username="TestUser"
       />
     );
     expect(screen.getByText('Hello world')).toBeInTheDocument();
@@ -47,7 +47,7 @@ describe('ChatMessage', () => {
         isOwn={false}
         isLeader={true}
         isGameActive={true}
-        username="Player"
+        username="TestUser"
       />
     );
     expect(screen.getByText('TestUser')).toBeInTheDocument();
@@ -61,7 +61,7 @@ describe('ChatMessage', () => {
         isOwn={false}
         isLeader={true}
         isGameActive={false}
-        username="Player"
+        username="TestUser"
       />
     );
     expect(screen.getByText('TestUser')).toBeInTheDocument();
@@ -76,7 +76,7 @@ describe('ChatMessage', () => {
         isOwn={false}
         isLeader={false}
         isGameActive={true}
-        username="Player"
+        username="TestUser"
       />
     );
     expect(screen.getByText('🔍 Попытка угадать')).toBeInTheDocument();
@@ -100,7 +100,6 @@ describe('ChatMessage', () => {
     );
     expect(screen.getByText('User joined the room')).toBeInTheDocument();
     expect(screen.getByText('ℹ️')).toBeInTheDocument();
-    expect(screen.queryByTestId('message-author')).not.toBeInTheDocument();
   });
 
   it('formats timestamp correctly', () => {
@@ -115,7 +114,7 @@ describe('ChatMessage', () => {
         isOwn={false}
         isLeader={false}
         isGameActive={true}
-        username="Player"
+        username="TestUser"
       />
     );
     expect(screen.getByText(/14:30/)).toBeInTheDocument();

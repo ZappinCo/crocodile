@@ -75,7 +75,7 @@ export const websocketMiddleware: Middleware = ({ dispatch, getState }) => {
   setupListeners();
 
 
-  const checkCurrentUserStroke = (payload: any) => {
+  const checkCurrentUserStroke = (payload: Record<string, unknown>) => {
     const state = getState();
     const result = { ...payload };
     const usesId = state.user.id;

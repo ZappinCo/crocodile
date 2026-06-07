@@ -28,13 +28,13 @@ export interface WebSocketConfig {
 
 export interface WebSocketMessage {
   type: WebSocketEventType;
-  payload: any;
+  payload: unknown;
   timestamp: number;
 }
 
 export interface PendingMessage {
   type: WebSocketEventType;
-  payload: any;
+  payload: unknown;
 }
 
 export class WebSocketService extends EventEmitter {
@@ -118,7 +118,7 @@ export class WebSocketService extends EventEmitter {
     }
   }
 
-  send(type: WebSocketEventType, payload: any): void {
+  send(type: WebSocketEventType, payload: unknown): void {
     const message: WebSocketMessage = {
       type,
       payload,
@@ -145,7 +145,7 @@ export class WebSocketService extends EventEmitter {
     }
   }
 
-  emitEvent(type: WebSocketEventType, payload: any): void {
+  emitEvent(type: WebSocketEventType, payload: unknown): void {
     this.send(type, payload);
   }
 
@@ -222,7 +222,7 @@ const wsConfig: WebSocketConfig = {
 export const webSocketService = new WebSocketService(wsConfig);
 
 if (import.meta.env.DEV) {
-  (window as any).webSocketService = webSocketService;
+  (window as unknown).webSocketService = webSocketService;
 }
 
 export default webSocketService;

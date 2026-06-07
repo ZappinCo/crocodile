@@ -6,7 +6,7 @@ interface UseAutoScrollOptions {
 }
 
 export const useAutoScroll = <T extends HTMLDivElement>(
-  dependencies: any[],
+  dependencies: React.DependencyList,
   options: UseAutoScrollOptions = {}
 ) => {
   const { threshold = 100, behavior = 'smooth' } = options;
@@ -17,7 +17,6 @@ export const useAutoScroll = <T extends HTMLDivElement>(
   const checkIfNearBottom = useCallback(() => {
     const container = containerRef.current;
     if (!container) return false;
-
     const { scrollTop, scrollHeight, clientHeight } = container;
     const isNear = scrollHeight - scrollTop - clientHeight < threshold;
     setIsNearBottom(isNear);
@@ -54,7 +53,7 @@ export const useAutoScroll = <T extends HTMLDivElement>(
     if (autoScroll) {
       scrollToBottom();
     }
-  }, [dependencies]);
+  }, [dependencies, autoScroll, scrollToBottom]);
 
   useEffect(() => {
     const container = containerRef.current;

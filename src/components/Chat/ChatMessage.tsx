@@ -1,14 +1,7 @@
 import React from 'react';
-
+import type { Message } from '../../store/slices/chat.slice';
 interface ChatMessageProps {
-  message: {
-    id: string;
-    userId: string;
-    userName:string;
-    text: string;
-    timestamp: string;
-    isGuess?: boolean;
-  };
+  message: Message;
   isOwn: boolean;
   isLeader: boolean;
   isGameActive: boolean;
@@ -19,7 +12,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   message,
   isOwn,
   isLeader,
-  isGameActive
+  isGameActive,
+  username
 }) => {
   const formatTime = (timestamp: string) => {
     try {
@@ -46,7 +40,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       <div className="message-bubble">
         {!isOwn && (
           <div className="message-author">
-            {message.userName}
+            {username}
             {isLeader && isGameActive && (
               <span className="leader-badge-small" title="Ведущий">
                 👑

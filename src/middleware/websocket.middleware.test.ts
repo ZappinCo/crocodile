@@ -2,15 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
 import { websocketMiddleware } from './websocket.middleware';
 import { webSocketService } from '../services/websocket.service';
-import {
-  connected,
-  disconnected,
-  websocketError,
-  reconnecting,
-} from '../store/slices/websocket.slice';
-import { setRooms, updateRoom } from '../store/slices/rooms.slice';
-import { addMessage, setMessagesHistory, setLoading } from '../store/slices/chat.slice';
-import { addStroke, setStrokes } from '../store/slices/drawing.slice';
 
 vi.mock('../services/websocket.service', () => ({
   webSocketService: {

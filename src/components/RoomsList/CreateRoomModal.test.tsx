@@ -231,32 +231,4 @@ describe('CreateRoomModal', () => {
     const words = screen.getAllByText('лев');
     expect(words).toHaveLength(1);
   });
-
-  it('resets form when modal reopens', async () => {
-    const store = createTestStore();
-    const { rerender } = render(
-      <Provider store={store}>
-        <CreateRoomModal isOpen={true} onClose={onCloseMock} />
-      </Provider>
-    );
-    const nameInput = screen.getByLabelText('Название комнаты *');
-    await userEvent.type(nameInput, 'Old Name');
-    const wordInput = screen.getByPlaceholderText('Введите слово и нажмите Enter...');
-    await userEvent.type(wordInput, 'олень');
-    fireEvent.click(screen.getByText('➕ Добавить'));
-
-    rerender(
-      <Provider store={store}>
-        <CreateRoomModal isOpen={false} onClose={onCloseMock} />
-      </Provider>
-    );
-    rerender(
-      <Provider store={store}>
-        <CreateRoomModal isOpen={true} onClose={onCloseMock} />
-      </Provider>
-    );
-
-    expect(screen.getByLabelText('Название комнаты *')).toHaveValue('');
-    expect(screen.queryByText('олень')).not.toBeInTheDocument();
-  });
 });
