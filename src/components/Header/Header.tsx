@@ -1,19 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { selectUsername, clearUsername } from '../../store/slices/user.slice';
 import { UserModal } from '../UserModal/UserModal';
 import { UserMenu } from './UserMenu';
+import { selectIsUserSet } from '../../store/slices/user.slice';
 import logo from '../../assets/logo.svg';
 import '../../styles/components/header.css';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  
+
   const username = useAppSelector(selectUsername);
   const isConnected = useAppSelector(state => state.websocket.isConnected);
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -23,6 +24,12 @@ export const Header: React.FC = () => {
       window.location.reload();
     }
   };
+
+  const isUserSet = useAppSelector(selectIsUserSet);
+  useEffect(() => {
+    if (!isUserSet)
+      handleOpenModal();
+  }, [isUserSet])
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -56,7 +63,7 @@ export const Header: React.FC = () => {
               <span className="status-text">{isConnected ? 'Online' : 'Offline'}</span>
             </div>
 
-            <button 
+            <button
               className={`nav-btn ${location.pathname === '/about' ? 'active' : ''}`}
               onClick={() => navigate('/about')}
             >

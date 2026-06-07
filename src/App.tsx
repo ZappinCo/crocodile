@@ -17,22 +17,8 @@ function App() {
     };
   }, []);
 
-  const isUserSet = useAppSelector(selectIsUserSet);
-  const [isModalOpen, setIsModalOpen] = useState(!isUserSet);
-
-  const handleCloseModal = () => {
-    if (isUserSet) {
-      setIsModalOpen(false);
-    }
-  };
-
-  if (!isUserSet) {
-    return <UserModal isOpen={isModalOpen} onClose={handleCloseModal} />;
-  }
-
   return (
     <>
-      <UserModal isOpen={isModalOpen} onClose={handleCloseModal} />
       <Routes>
         <Route element={<MainLayout />}>
           <Route path="/" element={<RoomsList />} />
