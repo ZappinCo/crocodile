@@ -26,18 +26,18 @@ export interface WebSocketConfig {
   heartbeatInterval?: number;
 }
 
-interface WebSocketMessage {
+export interface WebSocketMessage {
   type: WebSocketEventType;
   payload: any;
   timestamp: number;
 }
 
-interface PendingMessage {
+export interface PendingMessage {
   type: WebSocketEventType;
   payload: any;
 }
 
-class WebSocketService extends EventEmitter {
+export class WebSocketService extends EventEmitter {
   private ws: WebSocket | null = null;
   private reconnectAttempts: number = 0;
   private reconnectTimer: number | null = null;

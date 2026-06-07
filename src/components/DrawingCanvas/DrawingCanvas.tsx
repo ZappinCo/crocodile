@@ -264,12 +264,6 @@ export const DrawingCanvas: React.FC = () => {
         {...drawingProps}
       />
       {isLeader && <Pallete />}
-
-      {!isLeader && (
-        <div className="drawing-overlay">
-          <p>🎨 Только ведущий может рисовать</p>
-        </div>
-      )}
     </div>
   );
 };
