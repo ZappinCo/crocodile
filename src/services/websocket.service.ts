@@ -1,4 +1,9 @@
 import { EventEmitter } from './event-emitter.service';
+declare global {
+  interface Window {
+    webSocketService: WebSocketService;
+  }
+}
 
 export type WebSocketEventType =
   | 'connect'
@@ -222,7 +227,7 @@ const wsConfig: WebSocketConfig = {
 export const webSocketService = new WebSocketService(wsConfig);
 
 if (import.meta.env.DEV) {
-  (window as unknown).webSocketService = webSocketService;
+  window.webSocketService = webSocketService;
 }
 
 export default webSocketService;
