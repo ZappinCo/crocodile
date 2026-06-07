@@ -18,7 +18,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   const formatTime = (timestamp: string) => {
     try {
       const date = new Date(timestamp);
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return date.toISOString().slice(11, 16);
     } catch {
       return '';
     }

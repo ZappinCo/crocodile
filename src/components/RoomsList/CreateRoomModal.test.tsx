@@ -146,6 +146,7 @@ describe('CreateRoomModal', () => {
       </Provider>
     );
     const nameInput = screen.getByLabelText('Название комнаты *');
+    await userEvent.clear(nameInput);
     await userEvent.type(nameInput, 'My Game Room');
     const createButton = screen.getByRole('button', { name: 'Создать' });
     fireEvent.click(createButton);
@@ -173,8 +174,10 @@ describe('CreateRoomModal', () => {
       </Provider>
     );
     const nameInput = screen.getByLabelText('Название комнаты *');
+    await userEvent.clear(nameInput);
     await userEvent.type(nameInput, 'Fun Room');
     const descInput = screen.getByLabelText('Описание (необязательно)');
+    await userEvent.clear(descInput);
     await userEvent.type(descInput, 'Best room ever');
     const capacitySelect = screen.getByLabelText('Максимум игроков');
     fireEvent.change(capacitySelect, { target: { value: '8' } });

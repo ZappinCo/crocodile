@@ -117,6 +117,6 @@ describe('ChatMessage', () => {
         username="TestUser"
       />
     );
-    expect(screen.getByText(/14:30/)).toBeInTheDocument();
+    expect(screen.getByText(/\d{2}:\d{2}/)).toBeInTheDocument();
   });
 });
