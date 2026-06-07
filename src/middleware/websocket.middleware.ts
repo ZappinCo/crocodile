@@ -1,4 +1,4 @@
-import type { Middleware } from '@reduxjs/toolkit';
+import type { Middleware, UnknownAction } from '@reduxjs/toolkit';
 import { webSocketService } from '../services/websocket.service';
 import { connected, disconnected, websocketError, reconnecting } from '../store/slices/websocket.slice';
 import { setRooms, updateRoom, } from '../store/slices/rooms.slice';
@@ -92,7 +92,7 @@ export const websocketMiddleware: Middleware = ({ dispatch, getState }) => {
     });
   }
 
-  return (next) => (action) => {
+  return (next) => (action: UnknownAction) => {
     switch (action.type) {
       case 'chat/sendMessage':
         webSocketService.emitEvent('new_message', action.payload);

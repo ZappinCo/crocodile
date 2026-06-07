@@ -5,7 +5,7 @@ interface UseAutoScrollOptions {
   behavior?: ScrollBehavior;
 }
 
-export const useAutoScroll = <T extends HTMLElement>(
+export const useAutoScroll = <T extends HTMLDivElement>(
   dependencies: any[],
   options: UseAutoScrollOptions = {}
 ) => {
