@@ -1,0 +1,58 @@
+.canvas-container {
+  position: relative;
+  width: 100%;
+  background: var(--canvas-bg);
+  border-radius: var(--border-radius-2xl);
+  border: 2px solid var(--color-primary-500);
+  overflow: hidden;
+  box-shadow: var(--canvas-shadow);
+  flex: 2;
+}
+
+.drawing-canvas {
+  touch-action: none;
+  display: block;
+  width: 100%;
+  height: auto;
+  cursor: crosshair;
+  background: var(--canvas-bg);
+  border-radius: var(--border-radius-lg);
+  transition: all var(--transition-base) var(--ease-in-out);
+  opacity: 1;
+}
+
+.drawing-canvas:active {
+  cursor: grabbing;
+}
+
+.canvas-controls {
+  position: absolute;
+  bottom: var(--spacing-4);
+  right: var(--spacing-4);
+  display: flex;
+  gap: var(--spacing-2);
+  z-index: var(--z-dropdown);
+}
+
+.canvas-controls button {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-2);
+  cursor: pointer;
+  transition: all var(--transition-base) var(--ease-in-out);
+  color: var(--text-primary);
+}
+
+.canvas-controls button:hover {
+  background: var(--color-accent);
+  color: var(--text-inverse);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+@media (max-width: 768px) {
+  .canvas-container {
+    min-height: 300px;
+  }
+}
